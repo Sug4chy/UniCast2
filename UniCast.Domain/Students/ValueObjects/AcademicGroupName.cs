@@ -4,27 +4,34 @@ namespace UniCast.Domain.Students.ValueObjects;
 
 public readonly record struct AcademicGroupName
 {
-    private readonly string _value;
+    public string StudyDirectionName { get; }
+    public int CourseNumber { get; }
+    public int GroupNumber { get; }
 
-    private AcademicGroupName(string value)
+    private AcademicGroupName(string studyDirectionName, int courseNumber, int groupNumber)
     {
-        _value = value;
+        StudyDirectionName = studyDirectionName;
+        CourseNumber = courseNumber;
+        GroupNumber = groupNumber;
     }
 
-    public static Result<AcademicGroupName> Create(string value)
+    public static Result<AcademicGroupName> From(string groupName)
     {
-        string[] valueParts = value.Split('-',
+        if (string.IsNullOrWhiteSpace(groupName))
+        {
+            return Result.Failure<AcademicGroupName>("Имя не должно быть пустым");
+        }
+
+        string[] groupNameParts = groupName.Split('-',
             StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        int groupNumber = int.Parse(valueParts[1]);
+        if (groupNameParts.Length != 2 || !int.TryParse(groupNameParts[1], out _))
+        {
+            return Result.Failure<AcademicGroupName>("Не валидный формат ввода");
+        }
 
-        return groupNumber % 100 is < 1 or > 4
-            ? Result.Failure<AcademicGroupName>("Номер группы некорректен")
-            : Result.Success(new AcademicGroupName(value));
+        return Result.Success(new AcademicGroupName(
+            studyDirectionName: groupNameParts[0],
+            courseNumber: groupNameParts[1][0] - '0',
+            groupNumber: int.Parse(groupNameParts[1][1..])));
     }
-
-    public static implicit operator string(AcademicGroupName groupName)
-        => groupName._value;
-
-    public override string ToString()
-        => this;
 }

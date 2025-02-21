@@ -4,12 +4,26 @@ using UniCast.Domain.Students.Entities;
 
 namespace UniCast.Domain.Messages.Entities;
 
+/// <summary>
+/// Сообщение от методиста, присланное из Moodle
+/// </summary>
 public sealed class MessageFromMethodist : Entity<IdOf<MessageFromMethodist>>
 {
     private readonly List<Student> _receivers;
 
+    /// <summary>
+    /// Текст сообщения
+    /// </summary>
     public string Body { get; }
+
+    /// <summary>
+    /// Имя отправившего сообщение пользователя в системе Moodle
+    /// </summary>
     public string SenderUsername { get; }
+
+    /// <summary>
+    /// Список студентов, кому это сообщение адресовано
+    /// </summary>
     public IReadOnlyList<Student> Receivers => _receivers.AsReadOnly();
 
     private MessageFromMethodist(
@@ -21,32 +35,5 @@ public sealed class MessageFromMethodist : Entity<IdOf<MessageFromMethodist>>
         _receivers = receivers;
         Body = body;
         SenderUsername = senderUsername;
-    }
-
-    public static Result<MessageFromMethodist> Create(
-        List<Student> receivers,
-        string body,
-        string senderUsername)
-    {
-        if (receivers is null)
-        {
-            return Result.Failure<MessageFromMethodist>("Не указаны получатели сообщения");
-        }
-
-        if (string.IsNullOrWhiteSpace(body))
-        {
-            return Result.Failure<MessageFromMethodist>("Не передано тело сообщения");
-        }
-
-        if (string.IsNullOrWhiteSpace(senderUsername))
-        {
-            return Result.Failure<MessageFromMethodist>("Не указан автор сообщения");
-        }
-
-        return Result.Success(new MessageFromMethodist(
-            id: IdOf<MessageFromMethodist>.New(),
-            receivers: receivers,
-            body: body,
-            senderUsername: senderUsername));
     }
 }

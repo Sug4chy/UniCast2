@@ -19,7 +19,7 @@ public readonly record struct StudentFullName
         Patronymic = patronymic;
     }
 
-    public static Result<StudentFullName> Create(string fullName)
+    public static Result<StudentFullName> From(string fullName)
     {
         string[] fullNameParts = fullName.Split(' ',
             StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

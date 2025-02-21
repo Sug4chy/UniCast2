@@ -19,31 +19,4 @@ public sealed class TelegramMessageReaction : Entity<IdOf<TelegramMessageReactio
         Reaction = reaction;
         Message = message;
     }
-
-    public static Result<TelegramMessageReaction> Create(
-        string reactorUsername,
-        string reaction,
-        TelegramMessage message)
-    {
-        if (message is null)
-        {
-            return Result.Failure<TelegramMessageReaction>("Не указано сообщение, на которое поставлена реакция");
-        }
-
-        if (string.IsNullOrWhiteSpace(reactorUsername))
-        {
-            return Result.Failure<TelegramMessageReaction>("Имя отреагировавшего пользователя отсутствует");
-        }
-
-        if (string.IsNullOrWhiteSpace(reaction))
-        {
-            return Result.Failure<TelegramMessageReaction>("Реакция отсутствует");
-        }
-
-        return Result.Success(new TelegramMessageReaction(
-            id: IdOf<TelegramMessageReaction>.New(),
-            reactorUsername: reactorUsername,
-            reaction: reaction,
-            message: message));
-    }
 }

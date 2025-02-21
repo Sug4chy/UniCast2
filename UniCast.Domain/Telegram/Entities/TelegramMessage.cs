@@ -25,20 +25,4 @@ public sealed class TelegramMessage : Entity<IdOf<TelegramChat>>
         Chat = chat;
         SrcMessage = srcMessage;
     }
-
-    public static Result<TelegramMessage> Create(
-        Maybe<List<TelegramMessageReaction>> reactions,
-        int extId,
-        TelegramChat chat,
-        MessageFromMethodist srcMessage)
-        => Result.FailureIf(chat is null, "Не указан чат, к которому относится сообщение")
-            .OnSuccessTry(
-                () => ArgumentNullException.ThrowIfNull(srcMessage, nameof(srcMessage)),
-                ex => ex.Message)
-            .Map(() => new TelegramMessage(
-                id: IdOf<TelegramChat>.New(),
-                reactions: reactions,
-                extId: extId,
-                chat: chat!,
-                srcMessage: srcMessage));
 }
