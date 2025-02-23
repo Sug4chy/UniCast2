@@ -18,7 +18,8 @@ public sealed class SendIndividualMessageEndpoint : Ep.Req<SendIndividualMessage
     }
 }
 
-public readonly record struct SendIndividualMessageRequest;
+public readonly record struct SendIndividualMessageRequest(
+);
 
 public sealed class SendIndividualMessageRequestValidator : AbstractValidator<SendIndividualMessageRequest>
 {
