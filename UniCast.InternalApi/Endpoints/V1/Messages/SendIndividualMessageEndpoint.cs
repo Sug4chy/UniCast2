@@ -8,7 +8,6 @@ public sealed class SendIndividualMessageEndpoint : Ep.Req<SendIndividualMessage
     public override void Configure()
     {
         Post("/internal-api/v1/messages/send-individual");
-        Version(1);
         AllowAnonymous();
     }
 

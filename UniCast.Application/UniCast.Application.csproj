@@ -10,4 +10,8 @@
       <ProjectReference Include="..\UniCast.Domain\UniCast.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Autofac" Version="8.2.0" />
+    </ItemGroup>
+
 </Project>

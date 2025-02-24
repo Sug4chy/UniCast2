@@ -17,7 +17,6 @@ public sealed class HandleUpdateEndpoint : Ep.Req<Update>.NoRes
     {
         Post("/telegram-bot/v1/updates");
         AllowAnonymous();
-        Version(1);
     }
 
     public override async Task HandleAsync(Update req, CancellationToken ct)
