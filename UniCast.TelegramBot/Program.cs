@@ -1,31 +1,62 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using FastEndpoints;
+using Serilog;
 using UniCast.Application.TelegramBot;
+using UniCast.Infrastructure.Database;
 using UniCast.Infrastructure.Telegram;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateLogger();
 
-builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
-    .ConfigureContainer<ContainerBuilder>(containerBuilder =>
-    {
-        containerBuilder.RegisterModule<TelegramBotApplicationModule>();
-
-        containerBuilder.RegisterModule(new TelegramInfrastructureModule
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
+    builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
+        .ConfigureContainer<ContainerBuilder>(containerBuilder =>
         {
-            BotToken = builder.Configuration["TelegramBot:Token"] ?? string.Empty,
-            WebhookUrl = builder.Configuration["WEBHOOK_URL"] ?? string.Empty,
+            containerBuilder.RegisterModule(new TelegramBotApplicationModule
+            {
+                BotUsername = builder.Configuration["TelegramBot:Username"] ?? string.Empty
+            });
+
+            containerBuilder.RegisterModule(new TelegramInfrastructureModule
+            {
+                BotToken = builder.Configuration["TelegramBot:Token"] ?? string.Empty,
+                WebhookUrl = builder.Configuration["WEBHOOK_URL"] ?? string.Empty
+            });
+            containerBuilder.RegisterModule(new DatabaseInfrastructureModule
+            {
+                ConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty
+            });
         });
+
+    builder.Host.UseSerilog((_, lc) =>
+    {
+        lc.WriteTo.Console();
     });
 
-builder.Services.AddFastEndpoints();
-builder.Services.AddRouting(options => options.LowercaseUrls = true);
+    builder.Services.ConfigureTelegramBot<Microsoft.AspNetCore.Http.Json.JsonOptions>(opt => opt.SerializerOptions);
 
-builder.Services.AddAsyncInitialization();
+    builder.Services.AddFastEndpoints();
+    builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
-var app = builder.Build();
+    builder.Services.AddAsyncInitialization();
 
-app.UseRouting();
-app.UseFastEndpoints();
+    var app = builder.Build();
+    app.UseSerilogRequestLogging();
 
-await app.InitAndRunAsync();
+    app.UseRouting();
+    app.UseFastEndpoints();
+
+    await app.InitAndRunAsync();
+}
+catch (Exception e)
+{
+    Log.Fatal(e, "Unhandled exception while initializing Telegram Bot.");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

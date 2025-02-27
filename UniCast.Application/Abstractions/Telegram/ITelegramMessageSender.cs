@@ -1,4 +1,4 @@
-namespace UniCast.Application.Abstractions;
+namespace UniCast.Application.Abstractions.Telegram;
 
 public interface ITelegramMessageSender
 {

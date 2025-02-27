@@ -11,12 +11,39 @@ public sealed class TelegramChannel : TelegramChat
     public AcademicGroup AcademicGroup { get; }
 
     private TelegramChannel(
-        IdOf<TelegramChat> id, 
-        string title, 
+        IdOf<TelegramChat> id,
+        string title,
         long extId,
-        Maybe<List<TelegramMessage>> maybeMessages, 
+        Maybe<List<TelegramMessage>> maybeMessages,
         AcademicGroup academicGroup) : base(id, title, extId, maybeMessages)
     {
         AcademicGroup = academicGroup;
+    }
+
+    public static Result<TelegramChannel> Create(
+        string title,
+        long extId,
+        AcademicGroup academicGroup,
+        Maybe<List<TelegramMessage>> maybeMessages = default)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return Result.Failure<TelegramChannel>("Название не должно быть пустым");
+        }
+
+        if (academicGroup is null)
+        {
+            return Result.Failure<TelegramChannel>("Группа должна быть указана");
+        }
+
+        return Result.Success(
+            new TelegramChannel(
+                id: IdOf<TelegramChat>.New(),
+                title: title,
+                extId: extId,
+                maybeMessages: maybeMessages,
+                academicGroup: academicGroup
+            )
+        );
     }
 }

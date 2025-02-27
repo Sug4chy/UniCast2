@@ -17,11 +17,6 @@ public sealed class AcademicGroup : Entity<IdOf<AcademicGroup>>
     public AcademicGroupName Name { get; }
 
     /// <summary>
-    /// Номер курса, на котором обучается эта группа
-    /// </summary>
-    public int Course { get; }
-
-    /// <summary>
     /// Список студентов, которые учатся в этой группе
     /// </summary>
     public IReadOnlyList<Student> Students => _students.AsReadOnly();
@@ -29,11 +24,18 @@ public sealed class AcademicGroup : Entity<IdOf<AcademicGroup>>
     private AcademicGroup(
         IdOf<AcademicGroup> id,
         AcademicGroupName name,
-        int course,
         Maybe<List<Student>> maybeStudents) : base(id)
     {
         Name = name;
-        Course = course;
         _students = maybeStudents.GetValueOrDefault([]);
     }
+
+    public static AcademicGroup Create(
+        IdOf<AcademicGroup> id,
+        AcademicGroupName name,
+        Maybe<List<Student>> maybeStudents)
+        => new(
+            id: id,
+            name: name,
+            maybeStudents: maybeStudents);
 }

@@ -1,6 +1,6 @@
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
-using UniCast.Application.Abstractions;
+using UniCast.Application.Abstractions.Telegram;
 
 namespace UniCast.Infrastructure.Telegram;
 
