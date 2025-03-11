@@ -14,6 +14,7 @@ public sealed class DatabaseInfrastructureModule : Module
         LoadConnectionFactory(builder);
         LoadRepositories(builder);
         LoadMigrationsAsyncInitializer(builder);
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
     }
 
     private void LoadConnectionFactory(ContainerBuilder builder)

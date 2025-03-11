@@ -13,4 +13,12 @@ public static class DomainToDbModelExtensions
             Type: (byte)telegramChannel.Type,
             GroupId: telegramChannel.AcademicGroup.Id
         );
+
+    public static TelegramMessageReactionDbModel ToDbModel(this TelegramMessageReaction reaction)
+        => new(
+            Id: reaction.Id,
+            ReactorUsername: reaction.ReactorUsername,
+            Reaction: reaction.Reaction,
+            MessageId: reaction.Message.Id
+        );
 }

@@ -19,4 +19,13 @@ public sealed class TelegramMessageReaction : Entity<IdOf<TelegramMessageReactio
         Reaction = reaction;
         Message = message;
     }
+
+    public static Result<TelegramMessageReaction> Create(
+        IdOf<TelegramMessageReaction> id,
+        string reactorUsername,
+        string reaction,
+        TelegramMessage message)
+        => Result.FailureIf(string.IsNullOrWhiteSpace(reactorUsername), "Reactor username can't be empty.")
+            .Bind(() => Result.FailureIf(string.IsNullOrWhiteSpace(reaction), "Reaction can't be empty."))
+            .Map(() => new TelegramMessageReaction(id, reactorUsername, reaction, message));
 }
