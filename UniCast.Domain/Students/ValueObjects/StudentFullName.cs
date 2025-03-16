@@ -23,7 +23,7 @@ public readonly record struct StudentFullName
     {
         string[] fullNameParts = fullName.Split(' ',
             StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (fullNameParts.Length != 3)
+        if (fullNameParts.Length is > 3 or < 0)
         {
             return Result.Failure<StudentFullName>("ФИО должно состоять из трёх частей");
         }
@@ -43,16 +43,17 @@ public readonly record struct StudentFullName
     }
 
     public static implicit operator string(StudentFullName studentFullName)
+        => studentFullName.ToString();
+
+    public override string ToString()
     {
         var sb = new StringBuilder();
-        sb.Append($"{studentFullName.Surname} {studentFullName.Name}");
-        if (studentFullName.Patronymic.HasValue)
+        sb.Append($"{Surname} {Name}");
+        if (Patronymic.HasValue)
         {
-            sb.Append($" {studentFullName.Patronymic}");
+            sb.Append($" {Patronymic}");
         }
 
         return sb.ToString();
     }
-
-    public override string ToString() => this;
 }

@@ -37,4 +37,11 @@ public sealed class Student : Entity<IdOf<Student>>
         Group = group;
         _messages = messages.GetValueOrDefault([]);
     }
+
+    public static Student Create(
+        IdOf<Student> id,
+        StudentFullName fullName, 
+        AcademicGroup group,
+        Maybe<List<MessageFromMethodist>> messages = default) 
+        => new(id, fullName, group, messages);
 }

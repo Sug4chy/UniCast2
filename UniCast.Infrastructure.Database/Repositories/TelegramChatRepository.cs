@@ -18,6 +18,22 @@ public sealed class TelegramChatRepository : ITelegramChatRepository
         _dbConnectionFactory = dbConnectionFactory;
     }
 
+    public async Task<PrivateTelegramChat?> GetPrivateChatByExtIdAsync(long extId, CancellationToken ct = default)
+    {
+        const string query = $"""
+                              SELECT id AS {nameof(PrivateTelegramChatDbModel.Id)},
+                                     title AS {nameof(PrivateTelegramChatDbModel.Title)},
+                                     ext_id AS {nameof(PrivateTelegramChatDbModel.ExtId)},
+                                     type AS {nameof(PrivateTelegramChatDbModel.Type)},
+                                     student_id AS {nameof(PrivateTelegramChatDbModel.StudentId)}
+                              FROM telegram_chat
+                              WHERE ext_id = @{nameof(extId)};
+                              """;
+        await using var connection = await _dbConnectionFactory.ConnectAsync(ct);
+
+        return await connection.QuerySingleOrDefaultAsync<PrivateTelegramChat>(query, new { extId });
+    }
+
     public async Task AddChannelAsync(TelegramChannel chat, CancellationToken ct = default)
     {
         const string command = $"""
@@ -32,5 +48,27 @@ public sealed class TelegramChatRepository : ITelegramChatRepository
                                 """;
         await using var connection = await _dbConnectionFactory.ConnectAsync(ct);
         await connection.ExecuteAsync(command, chat.ToDbModel());
+    }
+
+    public async Task AddPrivateAsync(PrivateTelegramChat chat, CancellationToken ct = default)
+    {
+        const string command = $"""
+                                INSERT INTO telegram_chat(id, title, ext_id, type, student_id)
+                                VALUES (
+                                        @{nameof(PrivateTelegramChatDbModel.Id)},
+                                        @{nameof(PrivateTelegramChatDbModel.Title)},
+                                        @{nameof(PrivateTelegramChatDbModel.ExtId)},
+                                        @{nameof(PrivateTelegramChatDbModel.Type)},
+                                        @{nameof(PrivateTelegramChatDbModel.StudentId)}
+                                );
+                                """;
+        await using var connection = await _dbConnectionFactory.ConnectAsync(ct);
+
+        await connection.ExecuteAsync(command, chat.ToDbModel());
+    }
+
+    public Task UpdateScenarioAsync(PrivateTelegramChat chat, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
     }
 }

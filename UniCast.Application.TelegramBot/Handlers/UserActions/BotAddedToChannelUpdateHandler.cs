@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using UniCast.Application.Abstractions.Repositories;
+using UniCast.Domain.Students.ValueObjects;
 using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Handlers.UserActions;
@@ -44,18 +45,24 @@ public sealed partial class BotAddedToChannelUpdateHandler : IUpdateHandler
             return;
         }
 
-        string groupName = GroupNameRegex().Match(chatTitle).Value;
-        var group = await _academicGroupRepository.GetByNameAsync(groupName, ct);
+        var groupNameResult = AcademicGroupName.From(GroupNameRegex().Match(chatTitle).Value);
+        if (groupNameResult.IsFailure)
+        {
+            _logger.LogError("'{Error}' occured while creating AcademicGroupName", groupNameResult.Error);
+            return;
+        }
+
+        var group = await _academicGroupRepository.GetByNameAsync(groupNameResult.Value, ct);
         if (group is null)
         {
-            _logger.LogError("AcademicGroup with name {Name} wasn't found", groupName);
+            _logger.LogError("AcademicGroup with name {Name} wasn't found", groupNameResult.Value);
             return;
         }
 
         var channelResult = TelegramChannel.Create(chatTitle, update.MyChatMember!.Chat.Id, group);
         if (channelResult.IsFailure)
         {
-            _logger.LogError("{Error} occured while creating TelegramChannel", channelResult.Error);
+            _logger.LogError("'{Error}' occured while creating TelegramChannel", channelResult.Error);
             return;
         }
 

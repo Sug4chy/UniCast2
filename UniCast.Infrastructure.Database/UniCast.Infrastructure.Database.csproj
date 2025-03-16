@@ -20,6 +20,8 @@
     <ItemGroup>
       <None Remove="Scripts\000001_create-tables.sql" />
       <EmbeddedResource Include="Scripts\000001_create-tables.sql" />
+      <None Remove="Scripts\000002_add-scenarios.sql" />
+      <EmbeddedResource Include="Scripts\000002_add-scenarios.sql" />
     </ItemGroup>
 
 </Project>

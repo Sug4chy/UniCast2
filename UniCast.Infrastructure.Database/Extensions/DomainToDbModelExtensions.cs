@@ -21,4 +21,13 @@ public static class DomainToDbModelExtensions
             Reaction: reaction.Reaction,
             MessageId: reaction.Message.Id
         );
+
+    public static PrivateTelegramChatDbModel ToDbModel(this PrivateTelegramChat telegramChat)
+        => new(
+            Id: telegramChat.Id,
+            Title: telegramChat.Title,
+            ExtId: telegramChat.ExtId,
+            Type: (byte)telegramChat.Type,
+            StudentId: telegramChat.Student.HasValue ? telegramChat.Student.Value.Id : null
+        );
 }

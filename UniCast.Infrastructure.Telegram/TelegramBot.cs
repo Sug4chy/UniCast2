@@ -1,5 +1,6 @@
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Telegram;
 
 namespace UniCast.Infrastructure.Telegram;
@@ -13,10 +14,15 @@ public sealed class TelegramBot : ITelegramMessageSender
         _telegramBotClient = telegramBotClient;
     }
 
-    public Task SendMessageAsync(long chatId, string text, CancellationToken ct = default)
-        => _telegramBotClient.SendMessage(
-            chatId: chatId,
-            text: text,
-            parseMode: ParseMode.Html,
-            cancellationToken: ct);
+    public Task SendMessageAsync(
+        long chatId, 
+        string text, 
+        InlineKeyboardMarkup? inlineKeyboard = null,
+        CancellationToken ct = default)
+    => _telegramBotClient.SendMessage(
+        chatId: chatId,
+        text: text,
+        parseMode: ParseMode.Html,
+        replyMarkup: inlineKeyboard,
+        cancellationToken: ct);
 }

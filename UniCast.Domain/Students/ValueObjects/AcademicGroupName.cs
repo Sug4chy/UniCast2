@@ -34,4 +34,9 @@ public readonly record struct AcademicGroupName
             courseNumber: groupNameParts[1][0] - '0',
             groupNumber: int.Parse(groupNameParts[1][1..])));
     }
+
+    public static implicit operator string(AcademicGroupName groupName) => groupName.ToString();
+
+    public override string ToString()
+        => $"{StudyDirectionName}-{CourseNumber * 100 + GroupNumber}";
 }
