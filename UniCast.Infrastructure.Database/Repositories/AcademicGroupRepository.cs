@@ -49,7 +49,7 @@ public sealed class AcademicGroupRepository : IAcademicGroupRepository
 
     public async Task<IEnumerable<AcademicGroupName>> GetAllNamesAsync(CancellationToken ct = default)
     {
-        const string query = $"""
+        const string query = """
                               SELECT name
                               FROM academic_group;
                               """;

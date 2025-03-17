@@ -21,25 +21,32 @@ public readonly record struct StudentFullName
 
     public static Result<StudentFullName> From(string fullName)
     {
-        string[] fullNameParts = fullName.Split(' ',
-            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (fullNameParts.Length is > 3 or < 0)
+        try
         {
-            return Result.Failure<StudentFullName>("ФИО должно состоять из трёх частей");
-        }
-
-        for (int i = 0; i < 2; i++)
-        {
-            if (string.IsNullOrEmpty(fullNameParts[i]))
+            string[] fullNameParts = fullName.Split(' ',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (fullNameParts.Length is > 3 or < 0)
             {
-                return Result.Failure<StudentFullName>($"{FullNamePartsNames[i]} отсутствует");
+                return Result.Failure<StudentFullName>("ФИО должно состоять из трёх частей");
             }
-        }
 
-        return Result.Success(new StudentFullName(
-            name: fullNameParts[0],
-            surname: fullNameParts[1],
-            patronymic: Maybe.From(fullNameParts[2])));
+            for (int i = 0; i < 2; i++)
+            {
+                if (string.IsNullOrEmpty(fullNameParts[i]))
+                {
+                    return Result.Failure<StudentFullName>($"{FullNamePartsNames[i]} отсутствует");
+                }
+            }
+
+            return Result.Success(new StudentFullName(
+                name: fullNameParts[0],
+                surname: fullNameParts[1],
+                patronymic: fullNameParts.Length > 2 ? fullNameParts[2] : Maybe<string>.None));
+        }
+        catch (Exception e)
+        {
+            return Result.Failure<StudentFullName>(e.Message);
+        }
     }
 
     public static implicit operator string(StudentFullName studentFullName)

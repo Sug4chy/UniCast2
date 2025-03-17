@@ -15,7 +15,6 @@ public interface IScenarioExecutor<TState> : IScenarioExecutor
 
     int GetState(TState state);
     new TState GetState(int state);
-    bool CanStartScenario(Update update);
     Task ClearScenarioAsync(PrivateTelegramChat chat, CancellationToken ct = default);
 }
 
@@ -24,4 +23,5 @@ public interface IScenarioExecutor
     Scenario Scenario { get; }
     Task StartScenarioAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default);
     IState GetState(int state);
+    bool CanStartScenario(Update update);
 }

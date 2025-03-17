@@ -1,6 +1,7 @@
 using Autofac;
 using UniCast.Application.TelegramBot.Handlers;
 using UniCast.Application.TelegramBot.Handlers.UserActions;
+using UniCast.Application.TelegramBot.Scenarios;
 
 namespace UniCast.Application.TelegramBot;
 
@@ -12,6 +13,7 @@ public sealed class TelegramBotApplicationModule : Module
     {
         LoadUpdateDispatcher(builder);
         LoadUpdateHandlers(builder);
+        LoadScenarioExecutors(builder);
     }
 
     private static void LoadUpdateDispatcher(ContainerBuilder builder)
@@ -37,5 +39,17 @@ public sealed class TelegramBotApplicationModule : Module
             .AsImplementedInterfaces()
             .InstancePerLifetimeScope()
             .WithParameter(TypedParameter.From(BotUsername));
+    }
+
+    private void LoadScenarioExecutors(ContainerBuilder builder)
+    {
+        var executorsTypes = GetType().Assembly
+            .GetTypes()
+            .Where(t => t.IsAssignableTo(typeof(IScenarioExecutor)))
+            .ToArray();
+
+        builder.RegisterTypes(executorsTypes)
+            .AsImplementedInterfaces()
+            .InstancePerLifetimeScope();
     }
 }

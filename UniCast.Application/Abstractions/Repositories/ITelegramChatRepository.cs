@@ -8,4 +8,5 @@ public interface ITelegramChatRepository
     Task AddChannelAsync(TelegramChannel chat, CancellationToken ct = default);
     Task AddPrivateAsync(PrivateTelegramChat chat, CancellationToken ct = default);
     Task UpdateScenarioAsync(PrivateTelegramChat chat, CancellationToken ct = default);
+    Task UpdateStudentForPrivateChatAsync(PrivateTelegramChat chat, CancellationToken ct = default);
 }

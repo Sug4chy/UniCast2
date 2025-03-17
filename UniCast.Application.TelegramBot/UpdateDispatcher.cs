@@ -1,7 +1,9 @@
 using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using UniCast.Application.Abstractions.Repositories;
+using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Handlers;
 using UniCast.Application.TelegramBot.Scenarios;
 using UniCast.Domain.Common.ValueObjects;
@@ -15,43 +17,61 @@ public sealed class UpdateDispatcher
     private readonly IEnumerable<IUpdateHandler> _handlers;
     private readonly IEnumerable<IScenarioExecutor> _scenarioExecutors;
     private readonly ITelegramChatRepository _telegramChatRepository;
+    private readonly ILogger<UpdateDispatcher> _logger;
+    private readonly ITelegramMessageSender _telegramMessageSender;
 
     public UpdateDispatcher(
-        IEnumerable<IUpdateHandler> handlers, 
-        ITelegramChatRepository telegramChatRepository, 
-        IEnumerable<IScenarioExecutor> scenarioExecutors)
+        IEnumerable<IUpdateHandler> handlers,
+        ITelegramChatRepository telegramChatRepository,
+        IEnumerable<IScenarioExecutor> scenarioExecutors,
+        ILogger<UpdateDispatcher> logger,
+        ITelegramMessageSender telegramMessageSender)
     {
         _handlers = handlers;
         _telegramChatRepository = telegramChatRepository;
         _scenarioExecutors = scenarioExecutors;
+        _logger = logger;
+        _telegramMessageSender = telegramMessageSender;
     }
 
     public async Task DispatchAsync(Update update, CancellationToken ct = default)
     {
-        foreach (var handler in _handlers)
+        try
         {
-            if (!await handler.CanHandleAsync(update, ct))
+            foreach (var handler in _handlers)
             {
-                continue;
+                if (!await handler.CanHandleAsync(update, ct))
+                {
+                    continue;
+                }
+
+                await handler.HandleAsync(update, ct);
+                return;
             }
 
-            await handler.HandleAsync(update, ct);
-            return;
-        }
+            var chat = await _telegramChatRepository.GetPrivateChatByExtIdAsync(GetChatId(update), ct)
+                       ?? await CreateFromUpdateAsync(update, ct);
 
-        var chat = await _telegramChatRepository.GetPrivateChatByExtIdAsync(GetChatId(update), ct)
-            ?? await CreateFromUpdateAsync(update, ct);
-
-        var scenario = _scenarioExecutors.FirstOrDefault(s => s.Scenario == chat.CurrentScenario);
-        if (chat.CurrentScenario.HasNoValue)
-        {
-            chat.CurrentScenario = scenario?.Scenario ?? Maybe<Scenario>.None;
-            await (scenario?.StartScenarioAsync(chat, update, ct) ?? Task.CompletedTask);
+            if (chat.CurrentScenario.HasNoValue)
+            {
+                var scenario = _scenarioExecutors.FirstOrDefault(s => s.CanStartScenario(update));
+                chat.CurrentScenario = scenario?.Scenario ?? Maybe<Scenario>.None;
+                await (scenario?.StartScenarioAsync(chat, update, ct) ?? Task.CompletedTask);
+            }
+            else
+            {
+                var scenario = _scenarioExecutors.FirstOrDefault(s => s.Scenario == chat.CurrentScenario);
+                await (scenario?.GetState(chat.CurrentState.Value)?
+                    .HandleUserInputAsync(chat, update, ct) ?? Task.CompletedTask);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            await (scenario?.GetState(chat.CurrentState.Value)?
-                .HandleUserInputAsync(chat, update, ct) ?? Task.CompletedTask);
+            _logger.LogError(ex, "Exception message: '{Message}'", ex.Message);
+            await _telegramMessageSender.SendMessageAsync(
+                chatId: GetChatId(update),
+                text: "Кажется, что-то пошло не так...",
+                ct: ct);
         }
     }
 
@@ -67,7 +87,7 @@ public sealed class UpdateDispatcher
     {
         var chat = PrivateTelegramChat.CreateNew(
             IdOf<TelegramChat>.New(),
-            update.Message!.Chat.Title!,
+            update.Message!.Chat.Username!,
             update.Message!.Chat.Id
         );
 

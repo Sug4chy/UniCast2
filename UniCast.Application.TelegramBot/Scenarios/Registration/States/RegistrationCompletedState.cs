@@ -14,6 +14,7 @@ public sealed class RegistrationCompletedState : IRegistrationState
     private readonly RegistrationScenarioExecutor _scenarioExecutor;
     private readonly IAcademicGroupRepository _academicGroupRepository;
     private readonly IStudentRepository _studentRepository;
+    private readonly ITelegramChatRepository _telegramChatRepository;
     private readonly ITelegramMessageSender _telegramMessageSender;
 
     public RegistrationCompletedState(RegistrationScenarioExecutor scenarioExecutor, IServiceProvider serviceProvider)
@@ -22,6 +23,7 @@ public sealed class RegistrationCompletedState : IRegistrationState
         _academicGroupRepository = serviceProvider.GetRequiredService<IAcademicGroupRepository>();
         _studentRepository = serviceProvider.GetRequiredService<IStudentRepository>();
         _telegramMessageSender = serviceProvider.GetRequiredService<ITelegramMessageSender>();
+        _telegramChatRepository = serviceProvider.GetRequiredService<ITelegramChatRepository>();
     }
 
     public async Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
@@ -36,7 +38,9 @@ public sealed class RegistrationCompletedState : IRegistrationState
             fullName: fullName,
             group: group!);
         await _studentRepository.AddStudentAsync(student, ct);
+
         chat.Student = student;
+        await _telegramChatRepository.UpdateStudentForPrivateChatAsync(chat, ct);
 
         await _telegramMessageSender.SendMessageAsync(
             chatId: chat.ExtId,

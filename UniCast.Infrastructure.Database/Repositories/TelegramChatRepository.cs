@@ -25,13 +25,18 @@ public sealed class TelegramChatRepository : ITelegramChatRepository
                                      title AS {nameof(PrivateTelegramChatDbModel.Title)},
                                      ext_id AS {nameof(PrivateTelegramChatDbModel.ExtId)},
                                      type AS {nameof(PrivateTelegramChatDbModel.Type)},
-                                     student_id AS {nameof(PrivateTelegramChatDbModel.StudentId)}
+                                     student_id AS {nameof(PrivateTelegramChatDbModel.StudentId)},
+                                     current_scenario AS {nameof(PrivateTelegramChatDbModel.CurrentScenario)},
+                                     current_state AS {nameof(PrivateTelegramChatDbModel.CurrentState)},
+                                     current_scenario_args AS {nameof(PrivateTelegramChatDbModel.CurrentScenarioArgs)}
                               FROM telegram_chat
                               WHERE ext_id = @{nameof(extId)};
                               """;
         await using var connection = await _dbConnectionFactory.ConnectAsync(ct);
 
-        return await connection.QuerySingleOrDefaultAsync<PrivateTelegramChat>(query, new { extId });
+        var dbModel = await connection.QuerySingleOrDefaultAsync<PrivateTelegramChatDbModel>(query, new { extId });
+
+        return dbModel?.ToDomain();
     }
 
     public async Task AddChannelAsync(TelegramChannel chat, CancellationToken ct = default)
@@ -67,8 +72,29 @@ public sealed class TelegramChatRepository : ITelegramChatRepository
         await connection.ExecuteAsync(command, chat.ToDbModel());
     }
 
-    public Task UpdateScenarioAsync(PrivateTelegramChat chat, CancellationToken ct = default)
+    public async Task UpdateScenarioAsync(PrivateTelegramChat chat, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        const string command = $"""
+                                UPDATE telegram_chat
+                                SET current_scenario = @{nameof(PrivateTelegramChatDbModel.CurrentScenario)},
+                                    current_state = @{nameof(PrivateTelegramChatDbModel.CurrentState)},
+                                    current_scenario_args = @{nameof(PrivateTelegramChatDbModel.CurrentScenarioArgs)}::JSONB
+                                WHERE id = @{nameof(PrivateTelegramChatDbModel.Id)}
+                                """;
+        await using var connection = await _dbConnectionFactory.ConnectAsync(ct);
+
+        await connection.ExecuteAsync(command, chat.ToDbModel());
+    }
+
+    public async Task UpdateStudentForPrivateChatAsync(PrivateTelegramChat chat, CancellationToken ct = default)
+    {
+        const string command = $"""
+                                UPDATE telegram_chat
+                                SET student_id = @{nameof(PrivateTelegramChatDbModel.StudentId)}
+                                WHERE id = @{nameof(PrivateTelegramChatDbModel.Id)}
+                                """;
+        await using var connection = await _dbConnectionFactory.ConnectAsync(ct);
+
+        await connection.ExecuteAsync(command, chat.ToDbModel());
     }
 }

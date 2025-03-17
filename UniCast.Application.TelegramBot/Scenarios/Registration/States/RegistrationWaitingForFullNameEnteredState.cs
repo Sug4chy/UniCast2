@@ -44,9 +44,10 @@ public sealed class RegistrationWaitingForFullNameEnteredState : IRegistrationSt
         {
             await _telegramMessageSender.SendMessageAsync(
                 chatId: chat.ExtId,
-                text: $"Кажется, вы ввели что-то не то. Возникшая ошибка: {fullNameResult.Error}. " +
-                "Пожалуйста, введите своё ФИО ещё раз",
+                text: "Кажется, вы ввели что-то не то. Пожалуйста, введите своё ФИО ещё раз",
                 ct: ct);
+            _logger.LogWarning("Invalid user input: '{Input}'. Error: '{Error}'", 
+                update.Message.Text, fullNameResult.Error);
             return;
         }
 

@@ -1,3 +1,5 @@
+using System.Text.Json;
+using UniCast.Domain.Students.Entities;
 using UniCast.Domain.Telegram.Entities;
 using UniCast.Infrastructure.Database.Models;
 
@@ -28,6 +30,24 @@ public static class DomainToDbModelExtensions
             Title: telegramChat.Title,
             ExtId: telegramChat.ExtId,
             Type: (byte)telegramChat.Type,
-            StudentId: telegramChat.Student.HasValue ? telegramChat.Student.Value.Id : null
+            StudentId: telegramChat.Student.HasValue
+                ? telegramChat.Student.Value.Id
+                : null,
+            CurrentScenario: telegramChat.CurrentScenario.HasValue
+                ? (int)telegramChat.CurrentScenario.Value
+                : null,
+            CurrentState: telegramChat.CurrentState.HasValue
+                ? telegramChat.CurrentState.Value
+                : null,
+            CurrentScenarioArgs: telegramChat.CurrentScenarioArgs.Count == 0
+                ? null
+                : JsonSerializer.Serialize(telegramChat.CurrentScenarioArgs)
+        );
+
+    public static StudentDbModel ToDbModel(this Student student)
+        => new(
+            Id: student.Id,
+            FullName: student.FullName,
+            GroupId: student.Group.Id
         );
 }

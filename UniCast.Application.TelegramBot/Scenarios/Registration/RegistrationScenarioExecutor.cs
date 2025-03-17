@@ -39,19 +39,21 @@ public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrati
         {
             RegistrationStartedState => RegistrationScenarioState.Started,
             RegistrationWaitingForFullNameEnteredState => RegistrationScenarioState.WaitingForFullNameEntered,
+            RegistrationWaitingForGroupNameEnteredState => RegistrationScenarioState.WaitingForGroupNameEntered,
+            RegistrationCompletedState => RegistrationScenarioState.Completed,
             _ => throw new ArgumentOutOfRangeException(nameof(state))
         });
 
     public IRegistrationState GetState(int state)
-        => state switch
+        => Enum.Parse<RegistrationScenarioState>(state.ToString()) switch
         {
-            (int)RegistrationScenarioState.Started =>
+            RegistrationScenarioState.Started =>
                 new RegistrationStartedState(this, _serviceProvider),
-            (int)RegistrationScenarioState.WaitingForFullNameEntered =>
+            RegistrationScenarioState.WaitingForFullNameEntered =>
                 new RegistrationWaitingForFullNameEnteredState(this, _serviceProvider),
-            (int)RegistrationScenarioState.WaitingForGroupNameEntered =>
+            RegistrationScenarioState.WaitingForGroupNameEntered =>
                 new RegistrationWaitingForGroupNameEnteredState(this, _serviceProvider),
-            (int)RegistrationScenarioState.Completed =>
+            RegistrationScenarioState.Completed =>
                 new RegistrationCompletedState(this, _serviceProvider),
             _ => throw new ArgumentOutOfRangeException(nameof(state))
         };
