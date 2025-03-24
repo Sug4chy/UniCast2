@@ -2,6 +2,7 @@ using CSharpFunctionalExtensions;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Messages.Entities;
 using UniCast.Domain.Students.ValueObjects;
+using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Domain.Students.Entities;
 
@@ -10,38 +11,35 @@ namespace UniCast.Domain.Students.Entities;
 /// </summary>
 public sealed class Student : Entity<IdOf<Student>>
 {
-    private readonly List<MessageFromMethodist> _messages;
-
     /// <summary>
     /// ФИО студента
     /// </summary>
-    public StudentFullName FullName { get; private set; }
+    public StudentFullName FullName { get; init; }
+
+    public IdOf<AcademicGroup> GroupId { get; init; }
 
     /// <summary>
     /// Академическая группа, к которой принадлежит студент
     /// </summary>
-    public AcademicGroup Group { get; private set; }
+    public AcademicGroup? Group { get; init; }
 
     /// <summary>
     /// Сообщения, адресованные студенту
     /// </summary>
-    public IReadOnlyList<MessageFromMethodist> Messages => _messages.AsReadOnly();
+    public ICollection<MessageFromMethodist> Messages { get; init; }
 
-    private Student(
-        IdOf<Student> id,
-        StudentFullName fullName,
-        AcademicGroup group,
-        Maybe<List<MessageFromMethodist>> messages) : base(id)
-    {
-        FullName = fullName;
-        Group = group;
-        _messages = messages.GetValueOrDefault([]);
-    }
+    public PrivateTelegramChat? TelegramChat { get; init; }
 
     public static Student Create(
         IdOf<Student> id,
-        StudentFullName fullName, 
-        AcademicGroup group,
-        Maybe<List<MessageFromMethodist>> messages = default) 
-        => new(id, fullName, group, messages);
+        StudentFullName fullName,
+        AcademicGroup group)
+        => new()
+        {
+            Id = id,
+            FullName = fullName,
+            GroupId = group.Id,
+            Group = group,
+            Messages = []
+        };
 }

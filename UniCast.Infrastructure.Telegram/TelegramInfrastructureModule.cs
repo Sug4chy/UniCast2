@@ -8,12 +8,16 @@ public sealed class TelegramInfrastructureModule : Module
 {
     public required string BotToken { get; init; }
     public required string WebhookUrl { get; init; }
+    public required bool SetWebhook { get; init; }
 
     protected override void Load(ContainerBuilder builder)
     {
         LoadTelegramBotClient(builder);
         LoadTelegramBot(builder);
-        LoadSetWebhookAsyncInitializer(builder);
+        if (SetWebhook)
+        {
+            LoadSetWebhookAsyncInitializer(builder);
+        }
     }
 
     private void LoadTelegramBotClient(ContainerBuilder builder)

@@ -1,8 +1,11 @@
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using UniCast.Application.Abstractions.Repositories;
+using UniCast.Application.Abstractions.Persistence;
+using UniCast.Domain.Common.ValueObjects;
+using UniCast.Domain.Students.Entities;
 using UniCast.Domain.Students.ValueObjects;
 using UniCast.Domain.Telegram.Entities;
 
@@ -11,19 +14,16 @@ namespace UniCast.Application.TelegramBot.Handlers.UserActions;
 public sealed partial class BotAddedToChannelUpdateHandler : IUpdateHandler
 {
     private readonly string _botUsername;
-    private readonly ITelegramChatRepository _telegramChatRepository;
-    private readonly IAcademicGroupRepository _academicGroupRepository;
+    private readonly IDataContext _dataContext;
     private readonly ILogger<BotAddedToChannelUpdateHandler> _logger;
 
     public BotAddedToChannelUpdateHandler(
         string botUsername,
-        ITelegramChatRepository telegramChatRepository,
-        IAcademicGroupRepository academicGroupRepository,
+        IDataContext dataContext,
         ILogger<BotAddedToChannelUpdateHandler> logger)
     {
         _botUsername = botUsername;
-        _telegramChatRepository = telegramChatRepository;
-        _academicGroupRepository = academicGroupRepository;
+        _dataContext = dataContext;
         _logger = logger;
     }
 
@@ -45,29 +45,24 @@ public sealed partial class BotAddedToChannelUpdateHandler : IUpdateHandler
             return;
         }
 
-        var groupNameResult = AcademicGroupName.From(GroupNameRegex().Match(chatTitle).Value);
-        if (groupNameResult.IsFailure)
-        {
-            _logger.LogError("'{Error}' occured while creating AcademicGroupName", groupNameResult.Error);
-            return;
-        }
+        var groupName = AcademicGroupName.From(GroupNameRegex().Match(chatTitle).Value);
 
-        var group = await _academicGroupRepository.GetByNameAsync(groupNameResult.Value, ct);
+        var group = await GetGroupByNameAsync(groupName, ct);
         if (group is null)
         {
-            _logger.LogError("AcademicGroup with name {Name} wasn't found", groupNameResult.Value);
+            _logger.LogError("AcademicGroup with name {Name} wasn't found", groupName);
             return;
         }
 
-        var channelResult = TelegramChannel.Create(chatTitle, update.MyChatMember!.Chat.Id, group);
-        if (channelResult.IsFailure)
-        {
-            _logger.LogError("'{Error}' occured while creating TelegramChannel", channelResult.Error);
-            return;
-        }
+        var channel = TelegramChannel.Create(IdOf<TelegramChat>.New(), chatTitle, update.MyChatMember!.Chat.Id, group);
 
-        await _telegramChatRepository.AddChannelAsync(channelResult.Value, ct);
+        _dataContext.TelegramChats.Add(channel);
+        await _dataContext.SaveChangesAsync(ct);
     }
+
+    private Task<AcademicGroup?> GetGroupByNameAsync(AcademicGroupName groupName, CancellationToken ct = default)
+        => _dataContext.AcademicGroups
+            .SingleOrDefaultAsync(x => x.Name == groupName, ct);
 
     [GeneratedRegex("(ПрИ|БИ|ПИ)-\\d{3}")]
     private static partial Regex GroupNameRegex();

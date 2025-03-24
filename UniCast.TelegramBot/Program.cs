@@ -3,7 +3,7 @@ using Autofac.Extensions.DependencyInjection;
 using FastEndpoints;
 using Serilog;
 using UniCast.Application.TelegramBot;
-using UniCast.Infrastructure.Database;
+using UniCast.Infrastructure.Persistence;
 using UniCast.Infrastructure.Telegram;
 
 Log.Logger = new LoggerConfiguration()
@@ -24,9 +24,10 @@ try
             containerBuilder.RegisterModule(new TelegramInfrastructureModule
             {
                 BotToken = builder.Configuration["TelegramBot:Token"] ?? string.Empty,
-                WebhookUrl = builder.Configuration["WEBHOOK_URL"] ?? string.Empty
+                WebhookUrl = builder.Configuration["WEBHOOK_URL"] ?? string.Empty,
+                SetWebhook = true
             });
-            containerBuilder.RegisterModule(new DatabaseInfrastructureModule
+            containerBuilder.RegisterModule(new PersistenceInfrastructureModule
             {
                 ConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty
             });
@@ -54,7 +55,7 @@ try
 }
 catch (Exception e)
 {
-    Log.Fatal(e, "Unhandled exception while initializing Telegram Bot.");
+    Log.Error(e, "Unhandled exception while initializing Telegram Bot.");
 }
 finally
 {

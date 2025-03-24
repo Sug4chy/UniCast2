@@ -5,27 +5,28 @@ namespace UniCast.Domain.Telegram.Entities;
 
 public sealed class TelegramMessageReaction : Entity<IdOf<TelegramMessageReaction>>
 {
-    public string ReactorUsername { get; }
-    public string Reaction { get; }
-    public TelegramMessage Message { get; }
+    public required string ReactorUsername { get; init; }
+    public required string Reaction { get; init; }
 
-    private TelegramMessageReaction(
-        IdOf<TelegramMessageReaction> id,
-        string reactorUsername,
-        string reaction,
-        TelegramMessage message) : base(id)
-    {
-        ReactorUsername = reactorUsername;
-        Reaction = reaction;
-        Message = message;
-    }
+    public IdOf<TelegramMessage> MessageId { get; init; }
+    public TelegramMessage? Message { get; init; }
 
-    public static Result<TelegramMessageReaction> Create(
+    public static TelegramMessageReaction Create(
         IdOf<TelegramMessageReaction> id,
         string reactorUsername,
         string reaction,
         TelegramMessage message)
-        => Result.FailureIf(string.IsNullOrWhiteSpace(reactorUsername), "Reactor username can't be empty.")
-            .Bind(() => Result.FailureIf(string.IsNullOrWhiteSpace(reaction), "Reaction can't be empty."))
-            .Map(() => new TelegramMessageReaction(id, reactorUsername, reaction, message));
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(reactorUsername, nameof(reactorUsername));
+        ArgumentException.ThrowIfNullOrWhiteSpace(reaction, nameof(reaction));
+
+        return new TelegramMessageReaction
+        {
+            Id = id,
+            ReactorUsername = reactorUsername,
+            Reaction = reaction,
+            MessageId = message.Id,
+            Message = message
+        };
+    }
 }

@@ -1,14 +1,12 @@
-using CSharpFunctionalExtensions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using UniCast.Application.Abstractions.Repositories;
-using UniCast.Application.Abstractions.Telegram;
+using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.TelegramBot.Handlers;
 using UniCast.Application.TelegramBot.Scenarios;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Telegram.Entities;
-using UniCast.Domain.Telegram.ValueObjects.Enums;
 
 namespace UniCast.Application.TelegramBot;
 
@@ -16,22 +14,19 @@ public sealed class UpdateDispatcher
 {
     private readonly IEnumerable<IUpdateHandler> _handlers;
     private readonly IEnumerable<IScenarioExecutor> _scenarioExecutors;
-    private readonly ITelegramChatRepository _telegramChatRepository;
+    private readonly IDataContext _dataContext;
     private readonly ILogger<UpdateDispatcher> _logger;
-    private readonly ITelegramMessageSender _telegramMessageSender;
 
     public UpdateDispatcher(
         IEnumerable<IUpdateHandler> handlers,
-        ITelegramChatRepository telegramChatRepository,
         IEnumerable<IScenarioExecutor> scenarioExecutors,
-        ILogger<UpdateDispatcher> logger,
-        ITelegramMessageSender telegramMessageSender)
+        IDataContext dataContext,
+        ILogger<UpdateDispatcher> logger)
     {
         _handlers = handlers;
-        _telegramChatRepository = telegramChatRepository;
         _scenarioExecutors = scenarioExecutors;
+        _dataContext = dataContext;
         _logger = logger;
-        _telegramMessageSender = telegramMessageSender;
     }
 
     public async Task DispatchAsync(Update update, CancellationToken ct = default)
@@ -49,29 +44,25 @@ public sealed class UpdateDispatcher
                 return;
             }
 
-            var chat = await _telegramChatRepository.GetPrivateChatByExtIdAsync(GetChatId(update), ct)
+            var chat = await GetPrivateChatByExtIdAsync(GetChatId(update), ct)
                        ?? await CreateFromUpdateAsync(update, ct);
 
-            if (chat.CurrentScenario.HasNoValue)
+            if (chat.CurrentScenario is null)
             {
                 var scenario = _scenarioExecutors.FirstOrDefault(s => s.CanStartScenario(update));
-                chat.CurrentScenario = scenario?.Scenario ?? Maybe<Scenario>.None;
+                chat.CurrentScenario = scenario?.Scenario;
                 await (scenario?.StartScenarioAsync(chat, update, ct) ?? Task.CompletedTask);
             }
             else
             {
                 var scenario = _scenarioExecutors.FirstOrDefault(s => s.Scenario == chat.CurrentScenario);
-                await (scenario?.GetState(chat.CurrentState.Value)?
+                await (scenario?.GetState(chat.CurrentState!.Value)?
                     .HandleUserInputAsync(chat, update, ct) ?? Task.CompletedTask);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exception message: '{Message}'", ex.Message);
-            await _telegramMessageSender.SendMessageAsync(
-                chatId: GetChatId(update),
-                text: "Кажется, что-то пошло не так...",
-                ct: ct);
         }
     }
 
@@ -91,8 +82,14 @@ public sealed class UpdateDispatcher
             update.Message!.Chat.Id
         );
 
-        await _telegramChatRepository.AddPrivateAsync(chat, ct);
+        _dataContext.TelegramChats.Add(chat);
+        await _dataContext.SaveChangesAsync(ct);
 
         return chat;
     }
+
+    private Task<PrivateTelegramChat?> GetPrivateChatByExtIdAsync(long chatExtId, CancellationToken ct = default)
+        => _dataContext.TelegramChats
+            .Cast<PrivateTelegramChat>()
+            .SingleOrDefaultAsync(x => x.ExtId == chatExtId, ct);
 }

@@ -4,50 +4,26 @@ using UniCast.Domain.Messages.Entities;
 
 namespace UniCast.Domain.Telegram.Entities;
 
-public sealed class TelegramMessage : Entity<IdOf<TelegramChat>>
+public sealed class TelegramMessage : Entity<IdOf<TelegramMessage>>
 {
-    private readonly List<TelegramMessageReaction> _reactions;
-
-    public int ExtId { get; }
-    public IReadOnlyList<TelegramMessageReaction> Reactions => _reactions.AsReadOnly();
-    public Maybe<TelegramChat> Chat { get; }
-    public Maybe<MessageFromMethodist> SrcMessage { get; }
-
-    private TelegramMessage(
-        IdOf<TelegramChat> id,
-        Maybe<List<TelegramMessageReaction>> reactions,
-        int extId,
-        Maybe<TelegramChat> chat,
-        Maybe<MessageFromMethodist> srcMessage) : base(id)
-    {
-        _reactions = reactions.GetValueOrDefault([]);
-        ExtId = extId;
-        Chat = chat;
-        SrcMessage = srcMessage;
-    }
+    public int ExtId { get; init; }
+    public ICollection<TelegramMessageReaction> Reactions { get; init; }
+    public IdOf<TelegramChat> ChatId { get; init; }
+    public TelegramChat? Chat { get; init; }
+    public IdOf<MessageFromMethodist> SrcMessageId { get; set; }
+    public MessageFromMethodist? SrcMessage { get; set; }
 
     public static TelegramMessage Create(
-        IdOf<TelegramChat> id,
-        Maybe<List<TelegramMessageReaction>> reactions,
+        IdOf<TelegramMessage> id,
         int extId,
-        Maybe<TelegramChat> chat,
-        Maybe<MessageFromMethodist> srcMessage)
-        => new(
-            id: id,
-            reactions: reactions,
-            extId: extId,
-            chat: chat,
-            srcMessage: srcMessage
-        );
-
-    public void AddReaction(TelegramMessageReaction reaction)
-    {
-        if (_reactions.Find(r => r == reaction) is null)
+        TelegramChat chat,
+        MessageFromMethodist srcMessage)
+        => new()
         {
-            _reactions.Add(reaction);
-        }
-    }
-
-    public void AddReactions(List<TelegramMessageReaction> reactions)
-        => reactions.ForEach(AddReaction);
+            Id = id,
+            ExtId = extId,
+            Reactions = [],
+            ChatId = chat.Id,
+            Chat = chat
+        };
 }

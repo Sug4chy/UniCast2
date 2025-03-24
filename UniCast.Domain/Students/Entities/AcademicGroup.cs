@@ -1,6 +1,7 @@
 using CSharpFunctionalExtensions;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Students.ValueObjects;
+using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Domain.Students.Entities;
 
@@ -9,33 +10,28 @@ namespace UniCast.Domain.Students.Entities;
 /// </summary>
 public sealed class AcademicGroup : Entity<IdOf<AcademicGroup>>
 {
-    private readonly List<Student> _students;
-
     /// <summary>
     /// Официальное название группы. Состоит из направления обучения, номера курса и номера группы
     /// </summary>
-    public AcademicGroupName Name { get; }
+    public AcademicGroupName Name { get; init; }
 
     /// <summary>
     /// Список студентов, которые учатся в этой группе
     /// </summary>
-    public IReadOnlyList<Student> Students => _students.AsReadOnly();
+    public ICollection<Student> Students { get; init; }
 
-    private AcademicGroup(
-        IdOf<AcademicGroup> id,
-        AcademicGroupName name,
-        Maybe<List<Student>> maybeStudents) : base(id)
-    {
-        Name = name;
-        _students = maybeStudents.GetValueOrDefault([]);
-    }
+    /// <summary>
+    /// Telegram канал, в который выкладываются объявления этой группы
+    /// </summary>
+    public TelegramChannel? TelegramChannel { get; init; }
 
     public static AcademicGroup Create(
         IdOf<AcademicGroup> id,
-        AcademicGroupName name,
-        Maybe<List<Student>> maybeStudents)
-        => new(
-            id: id,
-            name: name,
-            maybeStudents: maybeStudents);
+        AcademicGroupName name)
+        => new()
+        {
+            Id = id,
+            Name = name,
+            Students = []
+        };
 }

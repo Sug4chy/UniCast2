@@ -1,7 +1,6 @@
-using CSharpFunctionalExtensions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using UniCast.Application.Abstractions.Repositories;
+using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.TelegramBot.Scenarios.Registration.States;
 using UniCast.Domain.Telegram.Entities;
 using UniCast.Domain.Telegram.ValueObjects.Enums;
@@ -10,14 +9,14 @@ namespace UniCast.Application.TelegramBot.Scenarios.Registration;
 
 public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrationState>
 {
-    private readonly ITelegramChatRepository _telegramChatRepository;
+    private readonly IDataContext _dataContext;
     private readonly IServiceProvider _serviceProvider;
 
     public RegistrationScenarioExecutor(
-        ITelegramChatRepository telegramChatRepository,
+        IDataContext dataContext,
         IServiceProvider serviceProvider)
     {
-        _telegramChatRepository = telegramChatRepository;
+        _dataContext = dataContext;
         _serviceProvider = serviceProvider;
     }
 
@@ -30,7 +29,7 @@ public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrati
         CancellationToken ct = default)
     {
         chat.CurrentState = GetState(newState);
-        await _telegramChatRepository.UpdateScenarioAsync(chat, ct);
+        await _dataContext.SaveChangesAsync(ct);
         await newState.OnStateChangedAsync(chat, update, ct);
     }
 
@@ -63,13 +62,13 @@ public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrati
            update.Message!.Text is not null &&
            update.Message.Text == "/start";
 
-    public Task ClearScenarioAsync(PrivateTelegramChat chat, CancellationToken ct = default)
+    public async Task ClearScenarioAsync(PrivateTelegramChat chat, CancellationToken ct = default)
     {
-        chat.CurrentScenario = Maybe<Scenario>.None;
-        chat.CurrentState = Maybe<int>.None;
+        chat.CurrentScenario = null;
+        chat.CurrentState = null;
         chat.CurrentScenarioArgs = [];
 
-        return _telegramChatRepository.UpdateScenarioAsync(chat, ct);
+        await _dataContext.SaveChangesAsync(ct);
     }
 
     public Task StartScenarioAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)

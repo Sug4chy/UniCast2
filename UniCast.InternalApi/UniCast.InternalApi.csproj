@@ -9,10 +9,21 @@
     <ItemGroup>
         <PackageReference Include="FastEndpoints" Version="5.34.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.1"/>
+        <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\UniCast.Application.InternalApi\UniCast.Application.InternalApi.csproj" />
+      <ProjectReference Include="..\UniCast.Application.TelegramBot\UniCast.Application.TelegramBot.csproj" />
+      <ProjectReference Include="..\UniCast.Infrastructure.Persistence\UniCast.Infrastructure.Persistence.csproj" />
+      <ProjectReference Include="..\UniCast.Infrastructure.Telegram\UniCast.Infrastructure.Telegram.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Autofac.Extensions.DependencyInjection">
+        <HintPath>..\..\..\.nuget\packages\autofac.extensions.dependencyinjection\10.0.0\lib\net8.0\Autofac.Extensions.DependencyInjection.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>

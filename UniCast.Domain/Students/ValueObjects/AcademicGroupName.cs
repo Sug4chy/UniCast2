@@ -1,5 +1,3 @@
-using CSharpFunctionalExtensions;
-
 namespace UniCast.Domain.Students.ValueObjects;
 
 public readonly record struct AcademicGroupName
@@ -15,24 +13,31 @@ public readonly record struct AcademicGroupName
         GroupNumber = groupNumber;
     }
 
-    public static Result<AcademicGroupName> From(string groupName)
+    public static bool IsValid(string groupName)
     {
-        if (string.IsNullOrWhiteSpace(groupName))
-        {
-            return Result.Failure<AcademicGroupName>("Имя не должно быть пустым");
-        }
-
-        string[] groupNameParts = groupName.Split('-',
+        string[] groupNameParts = groupName.Split('-', 
             StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (groupNameParts.Length != 2 || !int.TryParse(groupNameParts[1], out _))
+
+        return !string.IsNullOrWhiteSpace(groupName) &&
+               groupNameParts.Length == 2 &&
+               int.TryParse(groupNameParts[1], out _);
+    }
+
+
+    public static AcademicGroupName From(string groupName)
+    {
+        if (!IsValid(groupName))
         {
-            return Result.Failure<AcademicGroupName>("Не валидный формат ввода");
+            throw new ArgumentException(groupName, nameof(groupName));
         }
 
-        return Result.Success(new AcademicGroupName(
+        string[] groupNameParts = groupName.Split('-', 
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        return new AcademicGroupName(
             studyDirectionName: groupNameParts[0],
             courseNumber: groupNameParts[1][0] - '0',
-            groupNumber: int.Parse(groupNameParts[1][1..])));
+            groupNumber: int.Parse(groupNameParts[1][1..]));
     }
 
     public static implicit operator string(AcademicGroupName groupName) => groupName.ToString();

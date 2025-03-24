@@ -26,7 +26,7 @@ public sealed class RegistrationWaitingForFullNameEnteredState : IRegistrationSt
     public Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
         => _telegramMessageSender.SendMessageAsync(
             chatId: chat.ExtId,
-            text: "Пожалуйста, введите свои имя и фамилию (именно в этом порядке):",
+            text: "Давайте начнём знакомство. Пожалуйста, введите своё ФИО",
             ct: ct
         );
 
@@ -39,15 +39,14 @@ public sealed class RegistrationWaitingForFullNameEnteredState : IRegistrationSt
             return;
         }
 
-        var fullNameResult = StudentFullName.From(update.Message.Text);
-        if (fullNameResult.IsFailure)
+        if (!StudentFullName.IsValid(update.Message.Text))
         {
             await _telegramMessageSender.SendMessageAsync(
                 chatId: chat.ExtId,
                 text: "Кажется, вы ввели что-то не то. Пожалуйста, введите своё ФИО ещё раз",
                 ct: ct);
-            _logger.LogWarning("Invalid user input: '{Input}'. Error: '{Error}'", 
-                update.Message.Text, fullNameResult.Error);
+            _logger.LogWarning("Invalid user input: '{Input}'", 
+                update.Message.Text);
             return;
         }
 

@@ -1,9 +1,10 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using UniCast.Application.Abstractions.Repositories;
+using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Domain.Students.ValueObjects;
 using UniCast.Domain.Telegram.Entities;
@@ -16,7 +17,7 @@ public sealed class RegistrationWaitingForGroupNameEnteredState : IRegistrationS
 
     private readonly RegistrationScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageSender _telegramMessageSender;
-    private readonly IAcademicGroupRepository _academicGroupRepository;
+    private readonly IDataContext _dataContext;
     private readonly ILogger<RegistrationWaitingForGroupNameEnteredState> _logger;
 
     public RegistrationWaitingForGroupNameEnteredState(
@@ -25,7 +26,7 @@ public sealed class RegistrationWaitingForGroupNameEnteredState : IRegistrationS
     {
         _scenarioExecutor = scenarioExecutor;
         _telegramMessageSender = serviceProvider.GetRequiredService<ITelegramMessageSender>();
-        _academicGroupRepository = serviceProvider.GetRequiredService<IAcademicGroupRepository>();
+        _dataContext = serviceProvider.GetRequiredService<IDataContext>();
         _logger = serviceProvider.GetRequiredService<ILogger<RegistrationWaitingForGroupNameEnteredState>>();
     }
 
@@ -51,8 +52,8 @@ public sealed class RegistrationWaitingForGroupNameEnteredState : IRegistrationS
             return;
         }
 
-        var groupName = AcademicGroupName.From(update.CallbackQuery.Data[GroupNameCallbackDataStart.Length..]).Value;
-        if (!await _academicGroupRepository.ExistsByNameAsync(groupName, ct))
+        var groupName = AcademicGroupName.From(update.CallbackQuery.Data[GroupNameCallbackDataStart.Length..]);
+        if (!await GroupExistsByNameAsync(groupName, ct))
         {
             await _telegramMessageSender.SendMessageAsync(
                 chatId: chat.ExtId,
@@ -74,9 +75,13 @@ public sealed class RegistrationWaitingForGroupNameEnteredState : IRegistrationS
     private async Task<IEnumerable<InlineKeyboardButton>> GetInlineKeyboardWithGroupsNames(
         CancellationToken ct = default)
     {
-        var groupNames = await _academicGroupRepository.GetAllNamesAsync(ct);
+        var groupNames = await _dataContext.AcademicGroups.Select(x => x.Name).ToListAsync(ct);
 
         return groupNames
             .Select(s => new InlineKeyboardButton(s, GroupNameCallbackDataStart + s));
     }
+
+    private Task<bool> GroupExistsByNameAsync(AcademicGroupName groupName, CancellationToken ct = default)
+        => _dataContext.AcademicGroups
+            .AnyAsync(x => x.Name == groupName, ct);
 }

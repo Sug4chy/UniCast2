@@ -20,7 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastru
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniCast.Infrastructure.Telegram", "UniCast.Infrastructure.Telegram\UniCast.Infrastructure.Telegram.csproj", "{26954E51-3A0A-47B1-BB75-C992705BF935}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniCast.Infrastructure.Database", "UniCast.Infrastructure.Database\UniCast.Infrastructure.Database.csproj", "{3D20EEA6-F08F-468C-BB8C-0D4C6DA891B1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniCast.Infrastructure.Persistence", "UniCast.Infrastructure.Persistence\UniCast.Infrastructure.Persistence.csproj", "{3D20EEA6-F08F-468C-BB8C-0D4C6DA891B1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
