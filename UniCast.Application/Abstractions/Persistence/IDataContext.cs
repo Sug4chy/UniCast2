@@ -13,5 +13,6 @@ public interface IDataContext
     DbSet<TelegramChat> TelegramChats { get; init; }
     DbSet<TelegramMessage> TelegramMessages { get; init; }
     DbSet<TelegramMessageReaction> TelegramMessageReactions { get; init; }
+    DbSet<StudentsReply> StudentsReplies { get; init; }
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

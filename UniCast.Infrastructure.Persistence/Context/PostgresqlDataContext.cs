@@ -16,6 +16,7 @@ public sealed class PostgresqlDataContext(
     public DbSet<TelegramChat> TelegramChats { get; init; }
     public DbSet<TelegramMessage> TelegramMessages { get; init; }
     public DbSet<TelegramMessageReaction> TelegramMessageReactions { get; init; }
+    public DbSet<StudentsReply> StudentsReplies { get; init; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

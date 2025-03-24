@@ -15,8 +15,7 @@ public sealed class MigrationsAsyncInitializer : IAsyncInitializer
 
     public async Task InitializeAsync(CancellationToken ct)
     {
-        if (await _dataContext.Database.EnsureCreatedAsync(ct) &&
-            (await _dataContext.Database.GetPendingMigrationsAsync(ct)).Any())
+        if ((await _dataContext.Database.GetPendingMigrationsAsync(ct)).Any())
         {
             await _dataContext.Database.MigrateAsync(ct);
         }

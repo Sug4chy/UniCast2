@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using UniCast.Application.Abstractions.Persistence;
+using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Handlers;
 using UniCast.Application.TelegramBot.Scenarios;
 using UniCast.Domain.Common.ValueObjects;
@@ -12,20 +13,25 @@ namespace UniCast.Application.TelegramBot;
 
 public sealed class UpdateDispatcher
 {
+    private static readonly Exception ExceptionToIgnore = new();
+
     private readonly IEnumerable<IUpdateHandler> _handlers;
     private readonly IEnumerable<IScenarioExecutor> _scenarioExecutors;
     private readonly IDataContext _dataContext;
+    private readonly ITelegramMessageSender _telegramMessageSender;
     private readonly ILogger<UpdateDispatcher> _logger;
 
     public UpdateDispatcher(
         IEnumerable<IUpdateHandler> handlers,
         IEnumerable<IScenarioExecutor> scenarioExecutors,
         IDataContext dataContext,
+        ITelegramMessageSender telegramMessageSender,
         ILogger<UpdateDispatcher> logger)
     {
         _handlers = handlers;
         _scenarioExecutors = scenarioExecutors;
         _dataContext = dataContext;
+        _telegramMessageSender = telegramMessageSender;
         _logger = logger;
     }
 
@@ -63,6 +69,14 @@ public sealed class UpdateDispatcher
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exception message: '{Message}'", ex.Message);
+            if (ex != ExceptionToIgnore)
+            {
+                await _telegramMessageSender.SendMessageAsync(
+                    chatId: GetChatId(update),
+                    text: "Кажется, что-то пошло не так...",
+                    ct: ct
+                );
+            }
         }
     }
 
@@ -71,7 +85,7 @@ public sealed class UpdateDispatcher
         {
             UpdateType.Message => update.Message!.Chat.Id,
             UpdateType.CallbackQuery => update.CallbackQuery!.Message!.Chat.Id,
-            _ => throw new ArgumentOutOfRangeException(nameof(update))
+            _ => throw ExceptionToIgnore
         };
 
     private async Task<PrivateTelegramChat> CreateFromUpdateAsync(Update update, CancellationToken ct = default)
