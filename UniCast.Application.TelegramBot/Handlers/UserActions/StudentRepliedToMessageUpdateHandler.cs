@@ -30,13 +30,13 @@ public sealed class StudentRepliedToMessageUpdateHandler : IUpdateHandler
     public async ValueTask<bool> CanHandleAsync(Update update, CancellationToken ct = default)
         => update.Type is UpdateType.Message &&
            update.Message!.ReplyToMessage is not null &&
-           await MessageExistsByIdsPairAsync(update.Message.Chat.Id, update.Message.Id, ct);
+           await MessageExistsByIdsPairAsync(update.Message.Chat.Id, update.Message.ReplyToMessage!.Id, ct);
 
     public async Task HandleAsync(Update update, CancellationToken ct = default)
     {
         var message = await GetMessageFromMethodistByTelegramMessageIdsAsync(
             update.Message!.Chat.Id,
-            update.Message!.Id,
+            update.Message!.ReplyToMessage!.Id,
             ct
         );
 
