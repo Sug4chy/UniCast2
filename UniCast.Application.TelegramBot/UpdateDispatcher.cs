@@ -39,6 +39,7 @@ public sealed class UpdateDispatcher
     {
         try
         {
+            // TODO распараллелить выбор нужного обработчика
             foreach (var handler in _handlers)
             {
                 if (!await handler.CanHandleAsync(update, ct))

@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Students.Entities;
 using UniCast.Domain.Telegram.ValueObjects.Enums;
@@ -13,6 +14,7 @@ public sealed class PrivateTelegramChat : TelegramChat
 
     public Scenario? CurrentScenario { get; set; }
     public int? CurrentState { get; set; }
+
     public Dictionary<string, string> CurrentScenarioArgs { get; set; } = [];
 
     public static PrivateTelegramChat CreateNew(

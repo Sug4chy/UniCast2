@@ -344,7 +344,7 @@ namespace UniCast.Infrastructure.Persistence.Migrations
 
                             b1.HasKey("PrivateTelegramChatId");
 
-                            b1.ToTable("telegram_chat");
+                            b1.ToTable("telegram_chat", (string)null);
 
                             b1.ToJson("current_scenario_args");
 

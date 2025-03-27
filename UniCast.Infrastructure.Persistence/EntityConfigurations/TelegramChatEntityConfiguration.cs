@@ -1,8 +1,10 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using UniCast.Domain.Telegram.Entities;
 using UniCast.Domain.Telegram.ValueObjects.Enums;
 using UniCast.Infrastructure.Persistence.Extensions;
+using UniCast.Infrastructure.Persistence.ValueComparers;
 
 namespace UniCast.Infrastructure.Persistence.EntityConfigurations;
 
@@ -40,6 +42,8 @@ public sealed class TelegramChatEntityConfiguration : IEntityTypeConfiguration<T
 
     public sealed class PrivateTelegramChatEntityConfiguration : IEntityTypeConfiguration<PrivateTelegramChat>
     {
+        private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.General);
+
         public void Configure(EntityTypeBuilder<PrivateTelegramChat> builder)
         {
             builder.Property(x => x.StudentId)
@@ -57,12 +61,13 @@ public sealed class TelegramChatEntityConfiguration : IEntityTypeConfiguration<T
             builder.Property(x => x.CurrentState)
                 .HasColumnName(nameof(PrivateTelegramChat.CurrentState).ToSnakeCase());
 
-            builder.OwnsOne(x => x.CurrentScenarioArgs, navigationBuilder =>
-            {
-                navigationBuilder.ToJson(nameof(PrivateTelegramChat.CurrentScenarioArgs).ToSnakeCase());
-                navigationBuilder.Ignore(x => x.Capacity);
-                navigationBuilder.Ignore(x => x.Count);
-            });
+            builder.Property(x => x.CurrentScenarioArgs)
+                .HasColumnType("jsonb")
+                .HasConversion<string>(
+                    v => JsonSerializer.Serialize(v, JsonSerializerOptions),
+                    v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, JsonSerializerOptions)!,
+                    new DictionaryValueComparer())
+                .HasColumnName(nameof(PrivateTelegramChat.CurrentScenarioArgs).ToSnakeCase());
         }
     }
 

@@ -23,5 +23,7 @@ public interface IScenarioExecutor
     Scenario Scenario { get; }
     Task StartScenarioAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default);
     IState GetState(int state);
+
+    // TODO сделать асинхронным
     bool CanStartScenario(Update update);
 }
