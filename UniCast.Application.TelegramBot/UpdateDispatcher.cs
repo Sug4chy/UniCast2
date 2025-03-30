@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Handlers;
 using UniCast.Application.TelegramBot.Scenarios;
+using UniCast.Application.TelegramBot.Utlis;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Telegram.Entities;
 
@@ -39,24 +39,19 @@ public sealed class UpdateDispatcher
     {
         try
         {
-            // TODO распараллелить выбор нужного обработчика
-            foreach (var handler in _handlers)
+            var handler = await GetHandlerForUpdateAsync(update, ct);
+            if (handler is not null)
             {
-                if (!await handler.CanHandleAsync(update, ct))
-                {
-                    continue;
-                }
-
                 await handler.HandleAsync(update, ct);
                 return;
             }
 
-            var chat = await GetPrivateChatByExtIdAsync(GetChatId(update), ct)
+            var chat = await GetPrivateChatByExtIdAsync(TelegramHelpers.GetChatId(update, ExceptionToIgnore), ct)
                        ?? await CreateFromUpdateAsync(update, ct);
 
             if (chat.CurrentScenario is null)
             {
-                var scenario = _scenarioExecutors.FirstOrDefault(s => s.CanStartScenario(update));
+                var scenario = await GetScenarioExecutorForUpdateAsync(update, ct);
                 chat.CurrentScenario = scenario?.Scenario;
                 await (scenario?.StartScenarioAsync(chat, update, ct) ?? Task.CompletedTask);
             }
@@ -73,7 +68,7 @@ public sealed class UpdateDispatcher
             if (ex != ExceptionToIgnore)
             {
                 await _telegramMessageSender.SendMessageAsync(
-                    chatId: GetChatId(update),
+                    chatId: TelegramHelpers.GetChatId(update, ExceptionToIgnore),
                     text: "Кажется, что-то пошло не так...",
                     ct: ct
                 );
@@ -81,13 +76,18 @@ public sealed class UpdateDispatcher
         }
     }
 
-    private static long GetChatId(Update update)
-        => update.Type switch
+    private async Task<IUpdateHandler?> GetHandlerForUpdateAsync(Update update, CancellationToken ct)
+    {
+        foreach (var handler in _handlers)
         {
-            UpdateType.Message => update.Message!.Chat.Id,
-            UpdateType.CallbackQuery => update.CallbackQuery!.Message!.Chat.Id,
-            _ => throw ExceptionToIgnore
-        };
+            if (await handler.CanHandleAsync(update, ct))
+            {
+                return handler;
+            }
+        }
+
+        return null;
+    }
 
     private async Task<PrivateTelegramChat> CreateFromUpdateAsync(Update update, CancellationToken ct = default)
     {
@@ -107,4 +107,19 @@ public sealed class UpdateDispatcher
         => _dataContext.TelegramChats
             .Cast<PrivateTelegramChat>()
             .SingleOrDefaultAsync(x => x.ExtId == chatExtId, ct);
+
+    private async Task<IScenarioExecutor?> GetScenarioExecutorForUpdateAsync(
+        Update update,
+        CancellationToken ct = default)
+    {
+        foreach (var scenarioExecutor in _scenarioExecutors)
+        {
+            if (await scenarioExecutor.CanStartScenarioAsync(update, ct))
+            {
+                return scenarioExecutor;
+            }
+        }
+
+        return null;
+    }
 }

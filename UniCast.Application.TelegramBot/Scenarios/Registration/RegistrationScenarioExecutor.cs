@@ -1,7 +1,9 @@
+using Microsoft.EntityFrameworkCore;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.TelegramBot.Scenarios.Registration.States;
+using UniCast.Application.TelegramBot.Utlis;
 using UniCast.Domain.Telegram.Entities;
 using UniCast.Domain.Telegram.ValueObjects.Enums;
 
@@ -57,10 +59,18 @@ public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrati
             _ => throw new ArgumentOutOfRangeException(nameof(state))
         };
 
-    public bool CanStartScenario(Update update)
-        => update.Type is UpdateType.Message &&
-           update.Message!.Text is not null &&
-           update.Message.Text == "/start";
+    public async ValueTask<bool> CanStartScenarioAsync(Update update, CancellationToken ct = default)
+    {
+        long chatId = TelegramHelpers.GetChatId(update);
+
+        return update.Type is UpdateType.Message &&
+               update.Message!.Text is not null &&
+               update.Message.Text == "/start"
+               && await _dataContext.TelegramChats
+                   .Cast<PrivateTelegramChat>()
+                   .AnyAsync(x => x.ExtId == chatId &&
+                                  x.StudentId == null, ct);
+    }
 
     public async Task ClearScenarioAsync(PrivateTelegramChat chat, CancellationToken ct = default)
     {
