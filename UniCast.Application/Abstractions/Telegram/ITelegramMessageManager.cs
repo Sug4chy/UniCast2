@@ -3,11 +3,11 @@ using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.Abstractions.Telegram;
 
-public interface ITelegramMessageSender
+public interface ITelegramMessageManager
 {
     Task SendMessageAsync(
-        long chatId, 
-        string text, 
+        long chatId,
+        string text,
         InlineKeyboardMarkup? inlineKeyboard = null,
         CancellationToken ct = default);
 
@@ -16,4 +16,12 @@ public interface ITelegramMessageSender
         string text,
         InlineKeyboardMarkup? inlineKeyboard = null,
         CancellationToken ct = default);
+
+    Task EditMessageAsync(
+        long chatId,
+        int messageId,
+        string? newText = null,
+        InlineKeyboardMarkup? newInlineKeyboard = null,
+        CancellationToken ct = default
+    );
 }

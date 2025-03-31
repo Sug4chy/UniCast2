@@ -16,7 +16,7 @@ public sealed class RegistrationWaitingForGroupNameEnteredState : IRegistrationS
     private const string GroupNameCallbackDataStart = "GROUP_NAME_CALLBACK_";
 
     private readonly RegistrationScenarioExecutor _scenarioExecutor;
-    private readonly ITelegramMessageSender _telegramMessageSender;
+    private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly IDataContext _dataContext;
     private readonly ILogger<RegistrationWaitingForGroupNameEnteredState> _logger;
 
@@ -25,14 +25,14 @@ public sealed class RegistrationWaitingForGroupNameEnteredState : IRegistrationS
         IServiceProvider serviceProvider)
     {
         _scenarioExecutor = scenarioExecutor;
-        _telegramMessageSender = serviceProvider.GetRequiredService<ITelegramMessageSender>();
+        _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
         _logger = serviceProvider.GetRequiredService<ILogger<RegistrationWaitingForGroupNameEnteredState>>();
     }
 
     public async Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
     {
-        await _telegramMessageSender.SendMessageAsync(
+        await _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
             text: "Принято! Теперь выбери, в какой группе ты состоишь.",
             inlineKeyboard: new InlineKeyboardMarkup(
@@ -55,7 +55,7 @@ public sealed class RegistrationWaitingForGroupNameEnteredState : IRegistrationS
         var groupName = AcademicGroupName.From(update.CallbackQuery.Data[GroupNameCallbackDataStart.Length..]);
         if (!await GroupExistsByNameAsync(groupName, ct))
         {
-            await _telegramMessageSender.SendMessageAsync(
+            await _telegramMessageManager.SendMessageAsync(
                 chatId: chat.ExtId,
                 text: "Я не знаю такую группу. Пожалуйста, повторите ввод:",
                 inlineKeyboard: new InlineKeyboardMarkup(

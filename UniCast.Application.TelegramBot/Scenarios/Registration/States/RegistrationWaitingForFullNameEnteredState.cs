@@ -11,7 +11,7 @@ namespace UniCast.Application.TelegramBot.Scenarios.Registration.States;
 public sealed class RegistrationWaitingForFullNameEnteredState : IRegistrationState
 {
     private readonly RegistrationScenarioExecutor _scenarioExecutor;
-    private readonly ITelegramMessageSender _telegramMessageSender;
+    private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly ILogger<RegistrationWaitingForFullNameEnteredState> _logger;
 
     public RegistrationWaitingForFullNameEnteredState(
@@ -19,12 +19,12 @@ public sealed class RegistrationWaitingForFullNameEnteredState : IRegistrationSt
         IServiceProvider serviceProvider)
     {
         _scenarioExecutor = scenarioExecutor;
-        _telegramMessageSender = serviceProvider.GetRequiredService<ITelegramMessageSender>();
+        _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
         _logger = serviceProvider.GetRequiredService<ILogger<RegistrationWaitingForFullNameEnteredState>>();
     }
 
     public Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
-        => _telegramMessageSender.SendMessageAsync(
+        => _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
             text: "Давайте начнём знакомство. Пожалуйста, введите своё ФИО",
             ct: ct
@@ -41,7 +41,7 @@ public sealed class RegistrationWaitingForFullNameEnteredState : IRegistrationSt
 
         if (!StudentFullName.IsValid(update.Message.Text))
         {
-            await _telegramMessageSender.SendMessageAsync(
+            await _telegramMessageManager.SendMessageAsync(
                 chatId: chat.ExtId,
                 text: "Кажется, вы ввели что-то не то. Пожалуйста, введите своё ФИО ещё раз",
                 ct: ct);

@@ -1,9 +1,11 @@
 using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.Result;
+using UniCast.Application.Utlis;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Messages.Entities;
 using UniCast.Domain.Students.Entities;
@@ -15,16 +17,16 @@ namespace UniCast.Application.InternalApi.Command.Messages.SendIndividualMessage
 public sealed class SendIndividualMessageCommandHandler : ICommandHandler<SendIndividualMessageCommand>
 {
     private readonly IDataContext _dataContext;
-    private readonly ITelegramMessageSender _telegramMessageSender;
+    private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly ILogger<SendIndividualMessageCommandHandler> _logger;
 
     public SendIndividualMessageCommandHandler(
         IDataContext dataContext,
-        ITelegramMessageSender telegramMessageSender,
+        ITelegramMessageManager telegramMessageManager,
         ILogger<SendIndividualMessageCommandHandler> logger)
     {
         _dataContext = dataContext;
-        _telegramMessageSender = telegramMessageSender;
+        _telegramMessageManager = telegramMessageManager;
         _logger = logger;
     }
 
@@ -68,7 +70,7 @@ public sealed class SendIndividualMessageCommandHandler : ICommandHandler<SendIn
                 continue;
             }
 
-            var message = await _telegramMessageSender.SendMessageAsync(chat, command.Message, ct: ct);
+            var message = await _telegramMessageManager.SendMessageAsync(chat, command.Message, GetInlineKeyboard(), ct);
             message.SrcMessageId = messageFromMethodistResult.Value.Id;
             _dataContext.TelegramMessages.Add(message);
         }
@@ -87,4 +89,12 @@ public sealed class SendIndividualMessageCommandHandler : ICommandHandler<SendIn
         => _dataContext.TelegramChats
             .Cast<PrivateTelegramChat>()
             .SingleOrDefaultAsync(x => x.Student == student, ct);
+
+    private static InlineKeyboardMarkup GetInlineKeyboard()
+        => new(
+            (IEnumerable<InlineKeyboardButton>)
+            [
+                new InlineKeyboardButton(TelegramConstants.ThumbUpReaction, TelegramConstants.ThumbUpReaction),
+                new InlineKeyboardButton(TelegramConstants.ThumbDownReaction, TelegramConstants.ThumbDownReaction),
+            ]);
 }

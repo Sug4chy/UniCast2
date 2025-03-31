@@ -1,4 +1,4 @@
-namespace UniCast.Application.TelegramBot.Utlis;
+namespace UniCast.Application.Utlis;
 
 public static class TelegramConstants
 {

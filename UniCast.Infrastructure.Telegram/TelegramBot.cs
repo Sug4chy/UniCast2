@@ -7,7 +7,7 @@ using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Infrastructure.Telegram;
 
-public sealed class TelegramBot : ITelegramMessageSender
+public sealed class TelegramBot : ITelegramMessageManager
 {
     private readonly ITelegramBotClient _telegramBotClient;
 
@@ -47,5 +47,32 @@ public sealed class TelegramBot : ITelegramMessageSender
             chat: chat,
             srcMessage: null!
         );
+    }
+
+    public async Task EditMessageAsync(
+        long chatId,
+        int messageId,
+        string? newText = null,
+        InlineKeyboardMarkup? newInlineKeyboard = null,
+        CancellationToken ct = default)
+    {
+        if (newText is not null)
+        {
+            await _telegramBotClient.EditMessageText(
+                chatId: chatId,
+                messageId: messageId,
+                text: newText,
+                parseMode: ParseMode.Html,
+                cancellationToken: ct);
+        }
+
+        if (newInlineKeyboard is not null)
+        {
+            await _telegramBotClient.EditMessageReplyMarkup(
+                chatId: chatId,
+                messageId: messageId,
+                replyMarkup: newInlineKeyboard,
+                cancellationToken: ct);
+        }
     }
 }

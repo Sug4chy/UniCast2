@@ -14,13 +14,13 @@ public sealed class RegistrationCompletedState : IRegistrationState
 {
     private readonly RegistrationScenarioExecutor _scenarioExecutor;
     private readonly IDataContext _dataContext;
-    private readonly ITelegramMessageSender _telegramMessageSender;
+    private readonly ITelegramMessageManager _telegramMessageManager;
 
     public RegistrationCompletedState(RegistrationScenarioExecutor scenarioExecutor, IServiceProvider serviceProvider)
     {
         _scenarioExecutor = scenarioExecutor;
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
-        _telegramMessageSender = serviceProvider.GetRequiredService<ITelegramMessageSender>();
+        _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
     }
 
     public async Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
@@ -39,7 +39,7 @@ public sealed class RegistrationCompletedState : IRegistrationState
         chat.Student = student;
         await _dataContext.SaveChangesAsync(ct);
 
-        await _telegramMessageSender.SendMessageAsync(
+        await _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
             text: "Поздравляю вас с успешным завершением регистрации!",
             ct: ct);

@@ -64,9 +64,10 @@ public sealed class TelegramChatEntityConfiguration : IEntityTypeConfiguration<T
             builder.Property(x => x.CurrentScenarioArgs)
                 .HasColumnType("jsonb")
                 .HasConversion<string>(
-                    v => JsonSerializer.Serialize(v, JsonSerializerOptions),
-                    v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, JsonSerializerOptions)!,
-                    new DictionaryValueComparer())
+                    convertToProviderExpression: v => JsonSerializer.Serialize(v, JsonSerializerOptions),
+                    convertFromProviderExpression: v =>
+                        JsonSerializer.Deserialize<Dictionary<string, string>>(v, JsonSerializerOptions)!,
+                    valueComparer: new DictionaryValueComparer())
                 .HasColumnName(nameof(PrivateTelegramChat.CurrentScenarioArgs).ToSnakeCase());
         }
     }

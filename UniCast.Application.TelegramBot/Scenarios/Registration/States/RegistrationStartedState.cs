@@ -8,19 +8,19 @@ namespace UniCast.Application.TelegramBot.Scenarios.Registration.States;
 public sealed class RegistrationStartedState : IRegistrationState
 {
     private readonly RegistrationScenarioExecutor _scenarioExecutor;
-    private readonly ITelegramMessageSender _telegramMessageSender;
+    private readonly ITelegramMessageManager _telegramMessageManager;
 
     public RegistrationStartedState(
         RegistrationScenarioExecutor scenarioExecutor,
         IServiceProvider serviceProvider)
     {
         _scenarioExecutor = scenarioExecutor;
-        _telegramMessageSender = serviceProvider.GetRequiredService<ITelegramMessageSender>();
+        _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
     }
 
     public async Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
     {
-        await _telegramMessageSender.SendMessageAsync(
+        await _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId, 
             text: "Здравствуйте! Я - бот, цель жизни которого, это передавать студентам информацию. " +
             "Давайте начнём знакомиться!", 

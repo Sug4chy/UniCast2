@@ -8,11 +8,11 @@ namespace UniCast.Application.TelegramBot.Handlers.Commands;
 
 public sealed class FaqCommandCalledUpdateHandler : IUpdateHandler
 {
-    private readonly ITelegramMessageSender _telegramMessageSender;
+    private readonly ITelegramMessageManager _telegramMessageManager;
 
-    public FaqCommandCalledUpdateHandler(ITelegramMessageSender telegramMessageSender)
+    public FaqCommandCalledUpdateHandler(ITelegramMessageManager telegramMessageManager)
     {
-        _telegramMessageSender = telegramMessageSender;
+        _telegramMessageManager = telegramMessageManager;
     }
 
     public ValueTask<bool> CanHandleAsync(Update update, CancellationToken ct = default)
@@ -22,7 +22,7 @@ public sealed class FaqCommandCalledUpdateHandler : IUpdateHandler
             update.Message.Text.StartsWith("/faq"));
 
     public Task HandleAsync(Update update, CancellationToken ct = default)
-        => _telegramMessageSender.SendMessageAsync(
+        => _telegramMessageManager.SendMessageAsync(
             chatId: update.Message!.Chat.Id,
             text: FaqCommandMessages.Response,
             ct: ct);

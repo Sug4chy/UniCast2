@@ -18,20 +18,20 @@ public sealed class UpdateDispatcher
     private readonly IEnumerable<IUpdateHandler> _handlers;
     private readonly IEnumerable<IScenarioExecutor> _scenarioExecutors;
     private readonly IDataContext _dataContext;
-    private readonly ITelegramMessageSender _telegramMessageSender;
+    private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly ILogger<UpdateDispatcher> _logger;
 
     public UpdateDispatcher(
         IEnumerable<IUpdateHandler> handlers,
         IEnumerable<IScenarioExecutor> scenarioExecutors,
         IDataContext dataContext,
-        ITelegramMessageSender telegramMessageSender,
+        ITelegramMessageManager telegramMessageManager,
         ILogger<UpdateDispatcher> logger)
     {
         _handlers = handlers;
         _scenarioExecutors = scenarioExecutors;
         _dataContext = dataContext;
-        _telegramMessageSender = telegramMessageSender;
+        _telegramMessageManager = telegramMessageManager;
         _logger = logger;
     }
 
@@ -67,7 +67,7 @@ public sealed class UpdateDispatcher
             _logger.LogError(ex, "Exception message: '{Message}'", ex.Message);
             if (ex != ExceptionToIgnore)
             {
-                await _telegramMessageSender.SendMessageAsync(
+                await _telegramMessageManager.SendMessageAsync(
                     chatId: TelegramHelpers.GetChatId(update, ExceptionToIgnore),
                     text: "Кажется, что-то пошло не так...",
                     ct: ct

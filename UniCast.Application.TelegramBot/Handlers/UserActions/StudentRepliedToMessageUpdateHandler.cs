@@ -14,16 +14,16 @@ namespace UniCast.Application.TelegramBot.Handlers.UserActions;
 public sealed class StudentRepliedToMessageUpdateHandler : IUpdateHandler
 {
     private readonly IDataContext _dataContext;
-    private readonly ITelegramMessageSender _telegramMessageSender;
-    private readonly ILogger<StudentRepliedToMessageUpdateHandler> _logger; 
+    private readonly ITelegramMessageManager _telegramMessageManager;
+    private readonly ILogger<StudentRepliedToMessageUpdateHandler> _logger;
 
     public StudentRepliedToMessageUpdateHandler(
-        IDataContext dataContext, 
-        ITelegramMessageSender telegramMessageSender,
+        IDataContext dataContext,
+        ITelegramMessageManager telegramMessageManager,
         ILogger<StudentRepliedToMessageUpdateHandler> logger)
     {
         _dataContext = dataContext;
-        _telegramMessageSender = telegramMessageSender;
+        _telegramMessageManager = telegramMessageManager;
         _logger = logger;
     }
 
@@ -34,6 +34,15 @@ public sealed class StudentRepliedToMessageUpdateHandler : IUpdateHandler
 
     public async Task HandleAsync(Update update, CancellationToken ct = default)
     {
+        if (update.Message!.Text is null)
+        {
+            await _telegramMessageManager.SendMessageAsync(
+                chatId: update.Message.Chat.Id,
+                text: "Пожалуйста, ответьте текстом",
+                ct: ct);
+            return;
+        }
+
         var message = await GetMessageFromMethodistByTelegramMessageIdsAsync(
             update.Message!.Chat.Id,
             update.Message!.ReplyToMessage!.Id,
@@ -63,7 +72,7 @@ public sealed class StudentRepliedToMessageUpdateHandler : IUpdateHandler
         _dataContext.StudentsReplies.Add(reply);
         await _dataContext.SaveChangesAsync(ct);
 
-        await _telegramMessageSender.SendMessageAsync(
+        await _telegramMessageManager.SendMessageAsync(
             chatId: update.Message.Chat.Id,
             text: "Ваше сообщение было успешно отправлено методисту!",
             ct: ct);
