@@ -1,4 +1,4 @@
-using CSharpFunctionalExtensions;
+using System.Collections.Immutable;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Students.Entities;
 using UniCast.Domain.Telegram.ValueObjects.Enums;
@@ -7,18 +7,28 @@ namespace UniCast.Domain.Telegram.Entities;
 
 public sealed class PrivateTelegramChat : TelegramChat
 {
-    public override TelegramChatType Type => TelegramChatType.Private;
-    public Student Student { get; }
+    public override TelegramChatType Type { get; set; } = TelegramChatType.Private;
 
-    private PrivateTelegramChat(
+    public IdOf<Student>? StudentId { get; set; }
+    public Student? Student { get; set; }
+
+    public Scenario? CurrentScenario { get; set; }
+    public int? CurrentState { get; set; }
+
+    public Dictionary<string, string> CurrentScenarioArgs { get; set; } = [];
+
+    public static PrivateTelegramChat CreateNew(
         IdOf<TelegramChat> id,
         string title,
         long extId,
-        Student student,
-        Maybe<List<TelegramMessage>> maybeMessages) : base(id, title, extId, maybeMessages)
-    {
-        ArgumentNullException.ThrowIfNull(student, nameof(student));
-
-        Student = student;
-    }
+        Student? student = null)
+        => new()
+        {
+            Id = id,
+            Title = title,
+            ExtId = extId,
+            StudentId = student?.Id,
+            Student = student,
+            Messages = []
+        };
 }

@@ -1,42 +1,37 @@
 using CSharpFunctionalExtensions;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Students.ValueObjects;
+using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Domain.Students.Entities;
 
+/// <summary>
+/// Академическая группа, в которой учатся студенты
+/// </summary>
 public sealed class AcademicGroup : Entity<IdOf<AcademicGroup>>
 {
-    private readonly List<Student> _students;
+    /// <summary>
+    /// Официальное название группы. Состоит из направления обучения, номера курса и номера группы
+    /// </summary>
+    public AcademicGroupName Name { get; init; }
 
-    public AcademicGroupName Name { get; }
-    public int Course { get; }
-    public IReadOnlyList<Student> Students => _students.AsReadOnly();
+    /// <summary>
+    /// Список студентов, которые учатся в этой группе
+    /// </summary>
+    public ICollection<Student> Students { get; init; }
 
-    private AcademicGroup(
+    /// <summary>
+    /// Telegram канал, в который выкладываются объявления этой группы
+    /// </summary>
+    public TelegramChannel? TelegramChannel { get; init; }
+
+    public static AcademicGroup Create(
         IdOf<AcademicGroup> id,
-        AcademicGroupName name,
-        int course,
-        Maybe<List<Student>> maybeStudents) : base(id)
-    {
-        Name = name;
-        Course = course;
-        _students = maybeStudents.GetValueOrDefault([]);
-    }
-
-    public static Result<AcademicGroup> Create(
-        AcademicGroupName name,
-        int course,
-        Maybe<List<Student>> maybeStudents)
-    {
-        if (course is < 1 or > 4)
+        AcademicGroupName name)
+        => new()
         {
-            return Result.Failure<AcademicGroup>("Номер курса должен быть между 1 и 4");
-        }
-
-        return Result.Success(new AcademicGroup(
-            id: IdOf<AcademicGroup>.New(),
-            name: name,
-            course: course,
-            maybeStudents: maybeStudents));
-    }
+            Id = id,
+            Name = name,
+            Students = []
+        };
 }

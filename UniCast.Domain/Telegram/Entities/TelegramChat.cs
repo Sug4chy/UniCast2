@@ -6,23 +6,8 @@ namespace UniCast.Domain.Telegram.Entities;
 
 public abstract class TelegramChat : Entity<IdOf<TelegramChat>>
 {
-    protected readonly List<TelegramMessage> _messages;
-
-    public string Title { get; }
-    public long ExtId { get; }
-    public abstract TelegramChatType Type { get; }
-    public IReadOnlyList<TelegramMessage> Messages => _messages.AsReadOnly();
-
-    protected TelegramChat(
-        IdOf<TelegramChat> id, 
-        string title, 
-        long extId,
-        Maybe<List<TelegramMessage>> maybeMessages) : base(id)
-    {
-        ArgumentNullException.ThrowIfNull(title);
-
-        Title = title;
-        ExtId = extId;
-        _messages = maybeMessages.GetValueOrDefault([]);
-    }
+    public required string Title { get; init; }
+    public required long ExtId { get; init; }
+    public abstract TelegramChatType Type { get; set; }
+    public ICollection<TelegramMessage> Messages { get; init; } = [];
 }

@@ -1,30 +1,47 @@
-using CSharpFunctionalExtensions;
-
 namespace UniCast.Domain.Students.ValueObjects;
 
 public readonly record struct AcademicGroupName
 {
-    private readonly string _value;
+    public string StudyDirectionName { get; }
+    public int CourseNumber { get; }
+    public int GroupNumber { get; }
 
-    private AcademicGroupName(string value)
+    private AcademicGroupName(string studyDirectionName, int courseNumber, int groupNumber)
     {
-        _value = value;
+        StudyDirectionName = studyDirectionName;
+        CourseNumber = courseNumber;
+        GroupNumber = groupNumber;
     }
 
-    public static Result<AcademicGroupName> Create(string value)
+    public static bool IsValid(string groupName)
     {
-        string[] valueParts = value.Split('-',
+        string[] groupNameParts = groupName.Split('-', 
             StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        int groupNumber = int.Parse(valueParts[1]);
 
-        return groupNumber % 100 is < 1 or > 4
-            ? Result.Failure<AcademicGroupName>("Номер группы некорректен")
-            : Result.Success(new AcademicGroupName(value));
+        return !string.IsNullOrWhiteSpace(groupName) &&
+               groupNameParts.Length == 2 &&
+               int.TryParse(groupNameParts[1], out _);
     }
 
-    public static implicit operator string(AcademicGroupName groupName)
-        => groupName._value;
+
+    public static AcademicGroupName From(string groupName)
+    {
+        if (!IsValid(groupName))
+        {
+            throw new ArgumentException(groupName, nameof(groupName));
+        }
+
+        string[] groupNameParts = groupName.Split('-', 
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        return new AcademicGroupName(
+            studyDirectionName: groupNameParts[0],
+            courseNumber: groupNameParts[1][0] - '0',
+            groupNumber: int.Parse(groupNameParts[1][1..]));
+    }
+
+    public static implicit operator string(AcademicGroupName groupName) => groupName.ToString();
 
     public override string ToString()
-        => this;
+        => $"{StudyDirectionName}-{CourseNumber * 100 + GroupNumber}";
 }

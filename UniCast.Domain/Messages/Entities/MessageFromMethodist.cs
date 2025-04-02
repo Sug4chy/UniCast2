@@ -1,52 +1,50 @@
 using CSharpFunctionalExtensions;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Students.Entities;
+using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Domain.Messages.Entities;
 
+/// <summary>
+/// Сообщение от методиста, присланное из Moodle
+/// </summary>
 public sealed class MessageFromMethodist : Entity<IdOf<MessageFromMethodist>>
 {
-    private readonly List<Student> _receivers;
+    /// <summary>
+    /// Текст сообщения
+    /// </summary>
+    public required string Body { get; init; }
 
-    public string Body { get; }
-    public string SenderUsername { get; }
-    public IReadOnlyList<Student> Receivers => _receivers.AsReadOnly();
+    /// <summary>
+    /// Имя отправившего сообщение пользователя в системе Moodle
+    /// </summary>
+    public required string SenderUsername { get; init; }
 
-    private MessageFromMethodist(
+    /// <summary>
+    /// Список студентов, кому это сообщение адресовано
+    /// </summary>
+    public ICollection<Student> Students { get; set; }
+
+    /// <summary>
+    /// Сообщения в Telegram, которые были отправлены в рамках этой рассылки
+    /// </summary>
+    public ICollection<TelegramMessage> TelegramMessages { get; init; }
+
+    public static MessageFromMethodist Create(
         IdOf<MessageFromMethodist> id,
-        List<Student> receivers,
-        string body,
-        string senderUsername) : base(id)
-    {
-        _receivers = receivers;
-        Body = body;
-        SenderUsername = senderUsername;
-    }
-
-    public static Result<MessageFromMethodist> Create(
-        List<Student> receivers,
         string body,
         string senderUsername)
     {
-        if (receivers is null)
-        {
-            return Result.Failure<MessageFromMethodist>("Не указаны получатели сообщения");
-        }
+        ArgumentException.ThrowIfNullOrEmpty(body, nameof(body));
+        ArgumentException.ThrowIfNullOrWhiteSpace(senderUsername, nameof(senderUsername));
 
-        if (string.IsNullOrWhiteSpace(body))
+        return new MessageFromMethodist
         {
-            return Result.Failure<MessageFromMethodist>("Не передано тело сообщения");
-        }
-
-        if (string.IsNullOrWhiteSpace(senderUsername))
-        {
-            return Result.Failure<MessageFromMethodist>("Не указан автор сообщения");
-        }
-
-        return Result.Success(new MessageFromMethodist(
-            id: IdOf<MessageFromMethodist>.New(),
-            receivers: receivers,
-            body: body,
-            senderUsername: senderUsername));
+            Id = id,
+            Body = body,
+            SenderUsername = senderUsername,
+            Students = [],
+            TelegramMessages = []
+        };
     }
 }

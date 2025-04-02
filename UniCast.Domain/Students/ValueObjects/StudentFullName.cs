@@ -1,58 +1,53 @@
-using System.Collections.Immutable;
 using System.Text;
-using CSharpFunctionalExtensions;
 
 namespace UniCast.Domain.Students.ValueObjects;
 
 public readonly record struct StudentFullName
 {
-    private static readonly ImmutableArray<string> FullNamePartsNames = ["Фамилия", "Имя"];
-
     public string Name { get; }
     public string Surname { get; }
-    public Maybe<string> Patronymic { get; }
+    public string? Patronymic { get; }
 
-    private StudentFullName(string name, string surname, Maybe<string> patronymic)
+    private StudentFullName(string name, string surname, string? patronymic = null)
     {
         Name = name;
         Surname = surname;
         Patronymic = patronymic;
     }
 
-    public static Result<StudentFullName> Create(string fullName)
+    public static bool IsValid(string fullName)
+        => fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Length
+            is > 1 and <= 3;
+
+    public static StudentFullName From(string fullName)
     {
+        if (!IsValid(fullName))
+        {
+            throw new ArgumentException(fullName, nameof(fullName));
+        }
+
         string[] fullNameParts = fullName.Split(' ',
             StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (fullNameParts.Length != 3)
-        {
-            return Result.Failure<StudentFullName>("ФИО должно состоять из трёх частей");
-        }
 
-        for (int i = 0; i < 2; i++)
-        {
-            if (string.IsNullOrEmpty(fullNameParts[i]))
-            {
-                return Result.Failure<StudentFullName>($"{FullNamePartsNames[i]} отсутствует");
-            }
-        }
-
-        return Result.Success(new StudentFullName(
-            name: fullNameParts[0],
-            surname: fullNameParts[1],
-            patronymic: Maybe.From(fullNameParts[2])));
+        return new StudentFullName(
+            name: fullNameParts[1],
+            surname: fullNameParts[0],
+            patronymic: fullNameParts.Length > 2 ? fullNameParts[2] : null
+        );
     }
 
     public static implicit operator string(StudentFullName studentFullName)
+        => studentFullName.ToString();
+
+    public override string ToString()
     {
         var sb = new StringBuilder();
-        sb.Append($"{studentFullName.Surname} {studentFullName.Name}");
-        if (studentFullName.Patronymic.HasValue)
+        sb.Append($"{Surname} {Name}");
+        if (Patronymic is not null)
         {
-            sb.Append($" {studentFullName.Patronymic}");
+            sb.Append($" {Patronymic}");
         }
 
         return sb.ToString();
     }
-
-    public override string ToString() => this;
 }
