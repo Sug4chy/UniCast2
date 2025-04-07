@@ -24,4 +24,9 @@ public interface ITelegramMessageManager
         InlineKeyboardMarkup? newInlineKeyboard = null,
         CancellationToken ct = default
     );
+
+    Task DeleteMessageAsync(
+        long chatId,
+        int messageId,
+        CancellationToken ct = default);
 }

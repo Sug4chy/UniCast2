@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniCast.Infrastructure.Tele
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniCast.Infrastructure.Persistence", "UniCast.Infrastructure.Persistence\UniCast.Infrastructure.Persistence.csproj", "{3D20EEA6-F08F-468C-BB8C-0D4C6DA891B1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UniCast.Infrastructure.Moodle", "UniCast.Infrastructure.Moodle\UniCast.Infrastructure.Moodle.csproj", "{284B6518-A0E2-4551-9BE4-4A9848F21A1E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,6 +62,10 @@ Global
 		{3D20EEA6-F08F-468C-BB8C-0D4C6DA891B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D20EEA6-F08F-468C-BB8C-0D4C6DA891B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D20EEA6-F08F-468C-BB8C-0D4C6DA891B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{284B6518-A0E2-4551-9BE4-4A9848F21A1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{284B6518-A0E2-4551-9BE4-4A9848F21A1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{284B6518-A0E2-4551-9BE4-4A9848F21A1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{284B6518-A0E2-4551-9BE4-4A9848F21A1E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D1B604AF-A7C0-4A66-9499-2FA6954A9ED3} = {8C82B536-EB0C-4C2A-A67D-2FCCBF408407}
@@ -68,5 +74,6 @@ Global
 		{E3D02563-24BC-4EF4-8F97-7B3D20DBD5A7} = {62285943-3EB2-4C0A-A735-D65F03322E3B}
 		{26954E51-3A0A-47B1-BB75-C992705BF935} = {CB2C20FE-68D6-4E82-9BC2-321221E78FED}
 		{3D20EEA6-F08F-468C-BB8C-0D4C6DA891B1} = {CB2C20FE-68D6-4E82-9BC2-321221E78FED}
+		{284B6518-A0E2-4551-9BE4-4A9848F21A1E} = {CB2C20FE-68D6-4E82-9BC2-321221E78FED}
 	EndGlobalSection
 EndGlobal

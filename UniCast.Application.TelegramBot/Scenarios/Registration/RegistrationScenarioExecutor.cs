@@ -38,10 +38,18 @@ public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrati
     public int GetState(IRegistrationState state)
         => (int)(state switch
         {
-            RegistrationStartedState => RegistrationScenarioState.Started,
-            RegistrationWaitingForFullNameEnteredState => RegistrationScenarioState.WaitingForFullNameEntered,
-            RegistrationWaitingForGroupNameEnteredState => RegistrationScenarioState.WaitingForGroupNameEntered,
-            RegistrationCompletedState => RegistrationScenarioState.Completed,
+            RegistrationStartedState 
+                => RegistrationScenarioState.Started,
+            RegistrationWaitingForMoodleLoginEnteredState 
+                => RegistrationScenarioState.WaitingForMoodleLoginEntered,
+            RegistrationMoodleLoginEnteredState 
+                => RegistrationScenarioState.MoodleLoginEntered,
+            RegistrationStudentRecognizedState 
+                => RegistrationScenarioState.StudentRecognized,
+            RegistrationWaitingForMoodlePasswordEnteredState 
+                => RegistrationScenarioState.WaitingForMoodlePasswordEntered,
+            RegistrationCompletedState 
+                => RegistrationScenarioState.Completed,
             _ => throw new ArgumentOutOfRangeException(nameof(state))
         });
 
@@ -50,10 +58,14 @@ public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrati
         {
             RegistrationScenarioState.Started =>
                 new RegistrationStartedState(this, _serviceProvider),
-            RegistrationScenarioState.WaitingForFullNameEntered =>
-                new RegistrationWaitingForFullNameEnteredState(this, _serviceProvider),
-            RegistrationScenarioState.WaitingForGroupNameEntered =>
-                new RegistrationWaitingForGroupNameEnteredState(this, _serviceProvider),
+            RegistrationScenarioState.WaitingForMoodleLoginEntered =>
+                new RegistrationWaitingForMoodleLoginEnteredState(this, _serviceProvider),
+            RegistrationScenarioState.MoodleLoginEntered =>
+                new RegistrationMoodleLoginEnteredState(this, _serviceProvider),
+            RegistrationScenarioState.StudentRecognized =>
+                new RegistrationStudentRecognizedState(this, _serviceProvider),
+            RegistrationScenarioState.WaitingForMoodlePasswordEntered =>
+                new RegistrationWaitingForMoodlePasswordEnteredState(this, _serviceProvider),
             RegistrationScenarioState.Completed =>
                 new RegistrationCompletedState(this, _serviceProvider),
             _ => throw new ArgumentOutOfRangeException(nameof(state))

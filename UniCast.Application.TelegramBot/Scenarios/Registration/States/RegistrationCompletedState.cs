@@ -3,9 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
-using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Students.Entities;
-using UniCast.Domain.Students.ValueObjects;
 using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.Registration.States;
@@ -25,32 +23,21 @@ public sealed class RegistrationCompletedState : IRegistrationState
 
     public async Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
     {
-        var fullName = StudentFullName.From(chat.CurrentScenarioArgs["FULL_NAME"]);
-
-        var groupName = AcademicGroupName.From(chat.CurrentScenarioArgs["GROUP_NAME"]);
-        var group = await GetGroupByNameAsync(groupName, ct);
-
-        var student = Student.Create(
-            id: IdOf<Student>.New(),
-            fullName: fullName,
-            group: group!);
-        _dataContext.Students.Add(student);
-
+        var student = await GetStudentAsync(chat.CurrentScenarioArgs["STUDENT_FULL_NAME"], ct);
         chat.Student = student;
-        await _dataContext.SaveChangesAsync(ct);
+
+        await _scenarioExecutor.ClearScenarioAsync(chat, ct);
 
         await _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
-            text: "Поздравляю вас с успешным завершением регистрации!",
+            text: $"{student.FullName.ToString()}, поздравляем вас с успешным завершением регистрации!",
             ct: ct);
-
-        await _scenarioExecutor.ClearScenarioAsync(chat, ct);
     }
 
     public Task HandleUserInputAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
         => Task.CompletedTask;
 
-    private Task<AcademicGroup?> GetGroupByNameAsync(AcademicGroupName groupName, CancellationToken ct = default)
-        => _dataContext.AcademicGroups
-            .SingleOrDefaultAsync(x => x.Name == groupName, ct);
+    private Task<Student> GetStudentAsync(string fullName, CancellationToken ct = default)
+        => _dataContext.Students
+            .SingleAsync(x => x.FullName == fullName, ct);
 }

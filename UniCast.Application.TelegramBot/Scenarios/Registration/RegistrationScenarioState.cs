@@ -3,7 +3,9 @@ namespace UniCast.Application.TelegramBot.Scenarios.Registration;
 public enum RegistrationScenarioState
 {
     Started = 0,
-    WaitingForFullNameEntered = 1,
-    WaitingForGroupNameEntered = 2,
-    Completed = 3
+    WaitingForMoodleLoginEntered = 1,
+    MoodleLoginEntered = 2,
+    StudentRecognized = 3,
+    WaitingForMoodlePasswordEntered = 4,
+    Completed = 5
 }

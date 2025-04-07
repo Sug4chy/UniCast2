@@ -5,12 +5,12 @@ using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.Registration.States;
 
-public sealed class RegistrationStartedState : IRegistrationState
+public sealed class RegistrationWaitingForMoodleLoginEnteredState : IRegistrationState
 {
     private readonly RegistrationScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
 
-    public RegistrationStartedState(
+    public RegistrationWaitingForMoodleLoginEnteredState(
         RegistrationScenarioExecutor scenarioExecutor,
         IServiceProvider serviceProvider)
     {
@@ -21,15 +21,15 @@ public sealed class RegistrationStartedState : IRegistrationState
     public async Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
     {
         await _telegramMessageManager.SendMessageAsync(
-            chatId: chat.ExtId, 
-            text: "Здравствуйте! Я - бот, цель жизни которого, это передавать студентам информацию. " +
-            "Давайте начнём знакомиться!", 
+            chatId: chat.ExtId,
+            text: "Введите свой login от факультетского Moodle:",
             ct: ct);
 
         await _scenarioExecutor.ChangeStateAsync(
-            chat,
-            _scenarioExecutor.GetState((int)RegistrationScenarioState.WaitingForMoodleLoginEntered),
-            update, ct);
+            chat: chat,
+            newState: _scenarioExecutor.GetState((int)RegistrationScenarioState.MoodleLoginEntered),
+            update: update,
+            ct: ct);
     }
 
     public Task HandleUserInputAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)

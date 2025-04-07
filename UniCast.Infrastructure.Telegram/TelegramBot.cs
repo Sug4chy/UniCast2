@@ -75,4 +75,10 @@ public sealed class TelegramBot : ITelegramMessageManager
                 cancellationToken: ct);
         }
     }
+
+    public Task DeleteMessageAsync(long chatId, int messageId, CancellationToken ct = default)
+        => _telegramBotClient.DeleteMessage(
+            chatId: chatId,
+            messageId: messageId,
+            cancellationToken: ct);
 }

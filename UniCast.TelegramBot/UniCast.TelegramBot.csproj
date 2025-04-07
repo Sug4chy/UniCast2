@@ -21,6 +21,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\UniCast.Application.TelegramBot\UniCast.Application.TelegramBot.csproj" />
+      <ProjectReference Include="..\UniCast.Infrastructure.Moodle\UniCast.Infrastructure.Moodle.csproj" />
       <ProjectReference Include="..\UniCast.Infrastructure.Persistence\UniCast.Infrastructure.Persistence.csproj" />
       <ProjectReference Include="..\UniCast.Infrastructure.Telegram\UniCast.Infrastructure.Telegram.csproj" />
     </ItemGroup>

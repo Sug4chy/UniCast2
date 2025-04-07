@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Domain.Messages.Entities;
+using UniCast.Domain.Moodle;
 using UniCast.Domain.Students.Entities;
 using UniCast.Domain.Telegram.Entities;
 
@@ -16,6 +17,7 @@ public sealed class PostgresqlDataContext(
     public DbSet<TelegramChat> TelegramChats { get; init; }
     public DbSet<TelegramMessage> TelegramMessages { get; init; }
     public DbSet<TelegramMessageReaction> TelegramMessageReactions { get; init; }
+    public DbSet<MoodleAccount> MoodleAccounts { get; init; }
     public DbSet<StudentsReply> StudentsReplies { get; init; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
