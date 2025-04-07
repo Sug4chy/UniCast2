@@ -24,9 +24,11 @@ public sealed class MoodleAccountEntityConfiguration : IEntityTypeConfiguration<
         builder.HasIndex(x => x.Username).IsUnique();
 
         builder.Property(x => x.CurrentToken)
+            .IsRequired(false)
             .HasColumnName(nameof(MoodleAccount.CurrentToken).ToSnakeCase());
 
         builder.Property(x => x.StudentId)
+            .IsRequired(false)
             .HasDefaultIdConversion()
             .HasColumnName(nameof(MoodleAccount.StudentId).ToSnakeCase());
 

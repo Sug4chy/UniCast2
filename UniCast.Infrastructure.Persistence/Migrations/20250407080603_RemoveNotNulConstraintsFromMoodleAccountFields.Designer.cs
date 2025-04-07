@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UniCast.Infrastructure.Persistence.Context;
@@ -11,9 +12,11 @@ using UniCast.Infrastructure.Persistence.Context;
 namespace UniCast.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(PostgresqlDataContext))]
-    partial class PostgresqlDataContextModelSnapshot : ModelSnapshot
+    [Migration("20250407080603_RemoveNotNulConstraintsFromMoodleAccountFields")]
+    partial class RemoveNotNulConstraintsFromMoodleAccountFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

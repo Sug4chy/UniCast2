@@ -10,6 +10,6 @@ public sealed class MoodleAccount : Entity<IdOf<MoodleAccount>>
     public string Username { get; init; }
     public string CurrentToken { get; set; }
 
-    public IdOf<Student> StudentId { get; init; }
+    public IdOf<Student>? StudentId { get; init; }
     public Student? Student { get; init; }
 }
