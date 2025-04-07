@@ -1,16 +1,17 @@
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using UniCast.Application.Abstractions.Telegram;
+using UniCast.Application.TelegramBot.Messages.Scenarios;
 using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.Registration.States;
 
-public sealed class RegistrationWaitingForMoodleLoginEnteredState : IRegistrationState
+public sealed class RegistrationWaitingForMoodleUsernameEnteredState : IRegistrationState
 {
     private readonly RegistrationScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
 
-    public RegistrationWaitingForMoodleLoginEnteredState(
+    public RegistrationWaitingForMoodleUsernameEnteredState(
         RegistrationScenarioExecutor scenarioExecutor,
         IServiceProvider serviceProvider)
     {
@@ -22,12 +23,12 @@ public sealed class RegistrationWaitingForMoodleLoginEnteredState : IRegistratio
     {
         await _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
-            text: "Введите свой login от факультетского Moodle:",
+            text: RegistrationScenarioMessages.EnterUsername,
             ct: ct);
 
         await _scenarioExecutor.ChangeStateAsync(
             chat: chat,
-            newState: _scenarioExecutor.GetState((int)RegistrationScenarioState.MoodleLoginEntered),
+            newState: _scenarioExecutor.GetState((int)RegistrationScenarioState.MoodleUsernameEntered),
             update: update,
             ct: ct);
     }

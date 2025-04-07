@@ -3,18 +3,19 @@ using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
+using UniCast.Application.TelegramBot.Messages.Scenarios;
 using UniCast.Domain.Moodle;
 using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.Registration.States;
 
-public sealed class RegistrationMoodleLoginEnteredState : IRegistrationState
+public sealed class RegistrationMoodleUsernameEnteredState : IRegistrationState
 {
     private readonly RegistrationScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly IDataContext _dataContext;
 
-    public RegistrationMoodleLoginEnteredState(
+    public RegistrationMoodleUsernameEnteredState(
         RegistrationScenarioExecutor scenarioExecutor,
         IServiceProvider serviceProvider)
     {
@@ -30,20 +31,19 @@ public sealed class RegistrationMoodleLoginEnteredState : IRegistrationState
     {
         if (update.Message!.Text is null)
         {
-            await SendError(chat.ExtId, "Пожалуйста, введите свой login", ct);
+            await SendError(chat.ExtId, RegistrationScenarioMessages.PleaseEnterUsername, ct);
             return;
         }
 
         var moodleAccount = await GetMoodleAccountAsync(update.Message.Text, ct);
         if (moodleAccount is null)
         {
-            await SendError(chat.ExtId,
-                "Я не узнаю этот login. Возможно, вы ввели его с ошибкой. Пожалуйста, повторите ввод", ct);
+            await SendError(chat.ExtId, RegistrationScenarioMessages.CantRecognizeUserByUsername, ct);
             return;
         }
 
-        chat.CurrentScenarioArgs["STUDENT_FULL_NAME"] = moodleAccount.Student!.FullName;
-        chat.CurrentScenarioArgs["MOODLE_LOGIN"] = moodleAccount.Username;
+        chat.CurrentScenarioArgs[RegistrationScenarioArgsKeys.StudentFullName] = moodleAccount.Student!.FullName;
+        chat.CurrentScenarioArgs[RegistrationScenarioArgsKeys.MoodleUsername] = moodleAccount.Username;
         await _scenarioExecutor.ChangeStateAsync(
             chat: chat,
             newState: _scenarioExecutor.GetState((int)RegistrationScenarioState.StudentRecognized),

@@ -5,6 +5,7 @@ using Telegram.Bot.Types;
 using UniCast.Application.Abstractions.Moodle;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
+using UniCast.Application.TelegramBot.Messages.Scenarios;
 using UniCast.Domain.Moodle;
 using UniCast.Domain.Telegram.Entities;
 
@@ -33,8 +34,7 @@ public sealed class RegistrationWaitingForMoodlePasswordEnteredState : IRegistra
     {
         var message = await _telegramMessageManager.SendMessageAsync(
             chat: chat,
-            text: "Введите свой пароль от Moodle. Он не будет сохранён, и нужен для того, чтобы методисты видели " +
-                  "ваши сообщения именно от вашего имени",
+            text: RegistrationScenarioMessages.EnterPassword,
             ct: ct);
 
         MessageIdsToDeleteByChats[chat.ExtId] = new Queue<int>();
@@ -47,11 +47,12 @@ public sealed class RegistrationWaitingForMoodlePasswordEnteredState : IRegistra
     {
         if (update.Message!.Text is null)
         {
-            await SendError(chat, "Пожалуйста, введите свой пароль", ct);
+            await SendError(chat, RegistrationScenarioMessages.PleaseEnterPassword, ct);
             return;
         }
 
-        var moodleAccount = await GetMoodleAccountAsync(chat.CurrentScenarioArgs["MOODLE_LOGIN"], ct);
+        var moodleAccount = await GetMoodleAccountAsync(
+            chat.CurrentScenarioArgs[RegistrationScenarioArgsKeys.MoodleUsername], ct);
         string password = update.Message!.Text!;
 
         MessageIdsToDeleteByChats[chat.ExtId].Enqueue(update.Message.Id);

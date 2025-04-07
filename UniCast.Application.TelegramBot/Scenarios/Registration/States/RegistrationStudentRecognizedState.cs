@@ -2,12 +2,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Telegram;
+using UniCast.Application.TelegramBot.Messages.Scenarios;
 using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.Registration.States;
 
 public sealed class RegistrationStudentRecognizedState : IRegistrationState
 {
+    private const string Yes = "Да";
+    private const string No = "Нет";
+
     private readonly RegistrationScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
 
@@ -22,11 +26,12 @@ public sealed class RegistrationStudentRecognizedState : IRegistrationState
     public Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
         => _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
-            text: $"Кажется, я тебя узнал! Ты же {chat.CurrentScenarioArgs["STUDENT_FULL_NAME"]}, верно?",
+            text: string.Format(RegistrationScenarioMessages.ProbablyRecognizeUser,
+                chat.CurrentScenarioArgs[RegistrationScenarioArgsKeys.StudentFullName]),
             inlineKeyboard: new InlineKeyboardMarkup((IEnumerable<InlineKeyboardButton>)
             [
-                new InlineKeyboardButton("Да", "Да"),
-                new InlineKeyboardButton("Нет", "Нет")
+                new InlineKeyboardButton(Yes, Yes),
+                new InlineKeyboardButton(Yes, Yes)
             ]),
             ct: ct);
 
@@ -36,7 +41,7 @@ public sealed class RegistrationStudentRecognizedState : IRegistrationState
 
         switch (update.CallbackQuery.Data)
         {
-            case "Да":
+            case Yes:
                 await _scenarioExecutor.ChangeStateAsync(
                     chat: chat,
                     newState: _scenarioExecutor.GetState(
@@ -44,14 +49,14 @@ public sealed class RegistrationStudentRecognizedState : IRegistrationState
                     update: update,
                     ct: ct);
                 break;
-            case "Нет":
+            case No:
                 await _telegramMessageManager.SendMessageAsync(
                     chatId: chat.ExtId,
-                    text: "Извините за эту промашку. Пожалуйста, введите свой login ещё раз",
+                    text: RegistrationScenarioMessages.PleaseReenterUsername,
                     ct: ct);
                 await _scenarioExecutor.ChangeStateAsync(
                     chat: chat,
-                    newState: _scenarioExecutor.GetState((int)RegistrationScenarioState.MoodleLoginEntered),
+                    newState: _scenarioExecutor.GetState((int)RegistrationScenarioState.MoodleUsernameEntered),
                     update: update,
                     ct: ct);
                 break;

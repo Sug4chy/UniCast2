@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
+using UniCast.Application.TelegramBot.Messages.Scenarios;
 using UniCast.Domain.Students.Entities;
 using UniCast.Domain.Telegram.Entities;
 
@@ -23,14 +24,14 @@ public sealed class RegistrationCompletedState : IRegistrationState
 
     public async Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
     {
-        var student = await GetStudentAsync(chat.CurrentScenarioArgs["STUDENT_FULL_NAME"], ct);
+        var student = await GetStudentAsync(chat.CurrentScenarioArgs[RegistrationScenarioArgsKeys.StudentFullName], ct);
         chat.Student = student;
 
         await _scenarioExecutor.ClearScenarioAsync(chat, ct);
 
         await _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
-            text: $"{student.FullName.ToString()}, поздравляем вас с успешным завершением регистрации!",
+            text: string.Format(RegistrationScenarioMessages.RegistrationCompleted, student.FullName.ToString()),
             ct: ct);
     }
 

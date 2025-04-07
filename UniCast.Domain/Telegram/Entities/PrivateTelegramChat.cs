@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Students.Entities;
 using UniCast.Domain.Telegram.ValueObjects.Enums;

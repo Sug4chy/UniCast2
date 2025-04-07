@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using UniCast.Application.Abstractions.Telegram;
+using UniCast.Application.TelegramBot.Messages.Scenarios;
 using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.Registration.States;
@@ -22,13 +23,12 @@ public sealed class RegistrationStartedState : IRegistrationState
     {
         await _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId, 
-            text: "Здравствуйте! Я - бот, цель жизни которого, это передавать студентам информацию. " +
-            "Давайте начнём знакомиться!", 
+            text: RegistrationScenarioMessages.Greeting, 
             ct: ct);
 
         await _scenarioExecutor.ChangeStateAsync(
             chat,
-            _scenarioExecutor.GetState((int)RegistrationScenarioState.WaitingForMoodleLoginEntered),
+            _scenarioExecutor.GetState((int)RegistrationScenarioState.WaitingForMoodleUsernameEntered),
             update, ct);
     }
 
