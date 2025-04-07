@@ -1,6 +1,7 @@
 using CSharpFunctionalExtensions;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Messages.Entities;
+using UniCast.Domain.Moodle;
 using UniCast.Domain.Students.ValueObjects;
 using UniCast.Domain.Telegram.Entities;
 
@@ -29,6 +30,8 @@ public sealed class Student : Entity<IdOf<Student>>
     public ICollection<MessageFromMethodist> Messages { get; init; }
 
     public PrivateTelegramChat? TelegramChat { get; init; }
+
+    public MoodleAccount? MoodleAccount { get; init; }
 
     public static Student Create(
         IdOf<Student> id,
