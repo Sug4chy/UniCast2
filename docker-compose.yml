@@ -17,7 +17,7 @@
       db:
         condition: service_healthy
     networks:
-      default:
+      - uni-cast-network
 
   internal-api:
     image: sug4chy/unicast-internal-api
@@ -29,6 +29,8 @@
       TelegramBot__Username: ${TelegramBot__Username}
       ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
     restart: on-failure
+    networks:
+      - uni-cast-network
     depends_on:
       db:
         condition: service_healthy
@@ -40,10 +42,12 @@
       POSTGRES_PASSWORD: ${Postgres__Password}
       POSTGRES_DB: ${Postgres__DB}
     healthcheck:
-      test: [ "CMD_SHELL", "pg_isready", "-d", "postgres" ]
+      test: [ "CMD-SHELL", "pg_isready", "-d", "postgres" ]
       interval: 10s
       timeout: 3s
       retries: 3
+    networks:
+      - uni-cast-network
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
@@ -52,6 +56,8 @@
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./certificates:~/certificates
+    networks:
+      - uni-cast-network
     ports:
       - "8443:443"
 
