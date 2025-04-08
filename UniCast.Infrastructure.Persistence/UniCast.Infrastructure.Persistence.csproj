@@ -7,24 +7,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\UniCast.Application\UniCast.Application.csproj" />
+        <ProjectReference Include="..\UniCast.Application\UniCast.Application.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Extensions.Hosting.AsyncInitialization" Version="3.0.1" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
-      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="Scripts\000001_create-tables.sql" />
-      <None Remove="Scripts\000002_add-scenarios.sql" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="Serilog.Extensions.Logging">
-        <HintPath>..\..\..\.nuget\packages\serilog.extensions.logging\9.0.0\lib\net9.0\Serilog.Extensions.Logging.dll</HintPath>
-      </Reference>
+        <PackageReference Include="Extensions.Hosting.AsyncInitialization" Version="3.0.1"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3"/>
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4"/>
+        <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0"/>
     </ItemGroup>
 
 </Project>

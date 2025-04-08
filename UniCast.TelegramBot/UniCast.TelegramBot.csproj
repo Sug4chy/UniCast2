@@ -4,6 +4,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
     <ItemGroup>
@@ -24,6 +25,12 @@
       <ProjectReference Include="..\UniCast.Infrastructure.Moodle\UniCast.Infrastructure.Moodle.csproj" />
       <ProjectReference Include="..\UniCast.Infrastructure.Persistence\UniCast.Infrastructure.Persistence.csproj" />
       <ProjectReference Include="..\UniCast.Infrastructure.Telegram\UniCast.Infrastructure.Telegram.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
     </ItemGroup>
 
 </Project>

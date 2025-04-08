@@ -1,0 +1,22 @@
+﻿services:
+  telegram-bot:
+    image: sug4chy/unicast-telegram-bot
+
+  internal-api:
+    image: sug4chy/unicast-internal-api
+    ports:
+      - "5236:8080"
+
+  db:
+    image: postgres:16
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  nginx:
+    image: nginx
+    # TODO bind default.conf
+    ports:
+      - "8443:443"
+
+volumes:
+  postgres-data:
