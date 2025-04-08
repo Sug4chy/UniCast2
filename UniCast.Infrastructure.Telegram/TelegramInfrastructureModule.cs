@@ -9,6 +9,7 @@ public sealed class TelegramInfrastructureModule : Module
     public required string BotToken { get; init; }
     public required string WebhookUrl { get; init; }
     public required bool SetWebhook { get; init; }
+    public required string CertificatePath { get; init; }
 
     protected override void Load(ContainerBuilder builder)
     {
@@ -38,7 +39,8 @@ public sealed class TelegramInfrastructureModule : Module
     {
         builder.Register(ctx => new SetWebhookAsyncInitializer(
             ctx.Resolve<ITelegramBotClient>(),
-            WebhookUrl))
+            WebhookUrl,
+            CertificatePath))
             .AsImplementedInterfaces()
             .SingleInstance();
     }

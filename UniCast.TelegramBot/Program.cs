@@ -26,7 +26,8 @@ try
             {
                 BotToken = builder.Configuration["TelegramBot:Token"] ?? string.Empty,
                 WebhookUrl = builder.Configuration["WEBHOOK_URL"] ?? string.Empty,
-                SetWebhook = true
+                SetWebhook = true,
+                CertificatePath = builder.Configuration["WEBHOOK_CERTIFICATE_PATH"] ?? string.Empty
             });
             containerBuilder.RegisterModule(new PersistenceInfrastructureModule
             {
