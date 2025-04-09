@@ -20,6 +20,8 @@ public sealed class MessageFromMethodist : Entity<IdOf<MessageFromMethodist>>
     /// </summary>
     public required string SenderUsername { get; init; }
 
+    public int SenderExtId { get; init; }
+
     /// <summary>
     /// Список студентов, кому это сообщение адресовано
     /// </summary>
@@ -33,7 +35,8 @@ public sealed class MessageFromMethodist : Entity<IdOf<MessageFromMethodist>>
     public static MessageFromMethodist Create(
         IdOf<MessageFromMethodist> id,
         string body,
-        string senderUsername)
+        string senderUsername,
+        int senderExtId)
     {
         ArgumentException.ThrowIfNullOrEmpty(body, nameof(body));
         ArgumentException.ThrowIfNullOrWhiteSpace(senderUsername, nameof(senderUsername));
@@ -43,6 +46,7 @@ public sealed class MessageFromMethodist : Entity<IdOf<MessageFromMethodist>>
             Id = id,
             Body = body,
             SenderUsername = senderUsername,
+            SenderExtId = senderExtId,
             Students = [],
             TelegramMessages = []
         };

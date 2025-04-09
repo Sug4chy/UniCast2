@@ -34,7 +34,8 @@ public sealed class SendIndividualMessageEndpoint : Ep.Req<SendIndividualMessage
                     )
                     .ToList(),
                 req.Message,
-                req.From
+                req.SenderUsername,
+                req.SenderId
             ),
             ct);
 
@@ -51,7 +52,8 @@ public sealed class SendIndividualMessageEndpoint : Ep.Req<SendIndividualMessage
 public readonly record struct SendIndividualMessageRequest(
     List<StudentDto> Students,
     string Message,
-    string From
+    string SenderUsername,
+    int SenderId
 );
 
 public sealed class SendIndividualMessageRequestValidator : AbstractValidator<SendIndividualMessageRequest>
@@ -66,7 +68,7 @@ public sealed class SendIndividualMessageRequestValidator : AbstractValidator<Se
         RuleFor(x => x.Message)
             .NotEmpty();
 
-        RuleFor(x => x.From)
+        RuleFor(x => x.SenderUsername)
             .NotEmpty();
     }
 }

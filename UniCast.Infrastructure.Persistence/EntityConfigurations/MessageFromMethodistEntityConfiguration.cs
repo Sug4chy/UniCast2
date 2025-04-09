@@ -23,6 +23,10 @@ public sealed class MessageFromMethodistEntityConfiguration : IEntityTypeConfigu
             .IsRequired()
             .HasColumnName(nameof(MessageFromMethodist.SenderUsername).ToSnakeCase());
 
+        builder.Property(x => x.SenderExtId)
+            .IsRequired()
+            .HasColumnName(nameof(MessageFromMethodist.SenderExtId).ToSnakeCase());
+
         builder.HasMany(x => x.Students)
             .WithMany(x => x.Messages)
             .UsingEntity<MessageFromMethodistStudent>(

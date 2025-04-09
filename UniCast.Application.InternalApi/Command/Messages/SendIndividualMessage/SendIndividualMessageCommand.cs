@@ -5,5 +5,6 @@ namespace UniCast.Application.InternalApi.Command.Messages.SendIndividualMessage
 public record struct SendIndividualMessageCommand(
     List<StudentModel> Students,
     string Message,
-    string From
+    string From,
+    int SenderId
 ) : ICommand;

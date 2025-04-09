@@ -51,7 +51,8 @@ public sealed class SendIndividualMessageCommandHandler : ICommandHandler<SendIn
             () => MessageFromMethodist.Create(
                 id: IdOf<MessageFromMethodist>.New(),
                 body: command.Message,
-                senderUsername: command.From),
+                senderUsername: command.From,
+                senderExtId: command.SenderId),
             e => e.Message
         );
         if (messageFromMethodistResult.IsFailure)
