@@ -2,11 +2,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using UniCast.Application.Abstractions.Moodle;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
+using UniCast.Application.Result;
+using UniCast.Application.TelegramBot.Scenarios.RefreshToken;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Messages.Entities;
 using UniCast.Domain.Students.Entities;
+using UniCast.Domain.Telegram.Entities;
 using UniCast.Domain.Telegram.ValueObjects.Enums;
 
 namespace UniCast.Application.TelegramBot.Handlers.UserActions;
@@ -15,15 +19,21 @@ public sealed class StudentRepliedToMessageUpdateHandler : IUpdateHandler
 {
     private readonly IDataContext _dataContext;
     private readonly ITelegramMessageManager _telegramMessageManager;
+    private readonly IMoodleClient _moodleClient;
+    private readonly RefreshTokenScenarioExecutor _refreshTokenScenarioExecutor;
     private readonly ILogger<StudentRepliedToMessageUpdateHandler> _logger;
 
     public StudentRepliedToMessageUpdateHandler(
         IDataContext dataContext,
         ITelegramMessageManager telegramMessageManager,
+        IMoodleClient moodleClient,
+        RefreshTokenScenarioExecutor refreshTokenScenarioExecutor,
         ILogger<StudentRepliedToMessageUpdateHandler> logger)
     {
         _dataContext = dataContext;
         _telegramMessageManager = telegramMessageManager;
+        _moodleClient = moodleClient;
+        _refreshTokenScenarioExecutor = refreshTokenScenarioExecutor;
         _logger = logger;
     }
 
@@ -69,6 +79,31 @@ public sealed class StudentRepliedToMessageUpdateHandler : IUpdateHandler
             message: message
         );
 
+        var sendMessageResult = await _moodleClient.SendMessageAsync(
+            senderToken: student.MoodleAccount!.CurrentToken,
+            receiverExtId: message.SenderExtId,
+            text: reply.ReplyText,
+            ct: ct);
+
+        if (sendMessageResult.IsFailure)
+        {
+            if (sendMessageResult.Error.Group is ErrorGroup.AccessError)
+            {
+                await _refreshTokenScenarioExecutor.StartScenarioAsync(
+                    chat: await GetChatByExtIdAsync(update.Message.Chat.Id, ct),
+                    update: update,
+                    ct: ct);
+                return;
+            }
+
+            _logger.LogError("'{Error}' occured while sending message to methodist", sendMessageResult.Error);
+            await _telegramMessageManager.SendMessageAsync(
+                chatId: update.Message.Chat.Id,
+                text: "Кажется, что-то пошло не так. Пожалуйста, повторите попытку позже",
+                ct: ct);
+            return;
+        }
+
         _dataContext.StudentsReplies.Add(reply);
         await _dataContext.SaveChangesAsync(ct);
 
@@ -96,5 +131,11 @@ public sealed class StudentRepliedToMessageUpdateHandler : IUpdateHandler
 
     private Task<Student?> GetStudentByChatExtIdAsync(long chatExtId, CancellationToken ct = default)
         => _dataContext.Students
+            .Include(x => x.MoodleAccount)
             .SingleOrDefaultAsync(x => x.TelegramChat!.ExtId == chatExtId, ct);
+
+    private Task<PrivateTelegramChat> GetChatByExtIdAsync(long chatExtId, CancellationToken ct = default)
+        => _dataContext.TelegramChats
+            .Cast<PrivateTelegramChat>()
+            .SingleAsync(x => x.ExtId == chatExtId, ct);
 }

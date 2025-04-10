@@ -50,6 +50,7 @@ public sealed class TelegramBotApplicationModule : Module
 
         builder.RegisterTypes(executorsTypes)
             .AsImplementedInterfaces()
+            .AsSelf()
             .InstancePerLifetimeScope();
     }
 }
