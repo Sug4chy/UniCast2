@@ -1,10 +1,12 @@
 using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using UniCast.Application.Abstractions.Moodle;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
+using UniCast.Application.TelegramBot.Messages.Scenarios;
 using UniCast.Domain.Moodle;
 using UniCast.Domain.Telegram.Entities;
 
@@ -19,6 +21,7 @@ public sealed class RefreshTokenStartedState : IRefreshTokenState
     private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly IDataContext _dataContext;
     private readonly IMoodleClient _moodleClient;
+    private readonly ILogger<RefreshTokenStartedState> _logger;
 
     public RefreshTokenStartedState(RefreshTokenScenarioExecutor scenarioExecutor, IServiceProvider serviceProvider)
     {
@@ -26,6 +29,7 @@ public sealed class RefreshTokenStartedState : IRefreshTokenState
         _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
         _moodleClient = serviceProvider.GetRequiredService<IMoodleClient>();
+        _logger = serviceProvider.GetRequiredService<ILogger<RefreshTokenStartedState>>();
     }
 
     public async Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
@@ -35,8 +39,7 @@ public sealed class RefreshTokenStartedState : IRefreshTokenState
 
         var message = await _telegramMessageManager.SendMessageAsync(
             chat: chat,
-            text: "Время действия вашего пароля истекло. И раз уж мы его не сохраняем, то просим вас ввести его ещё" +
-                  "раз, чтобы вы могли продолжать пользоваться ботом",
+            text: RefreshTokenScenarioMessages.PasswordHasExpired,
             ct: ct);
 
         MessageIdsToDeleteByChats[chat.ExtId].Enqueue(message.ExtId);
@@ -46,8 +49,7 @@ public sealed class RefreshTokenStartedState : IRefreshTokenState
     {
         if (update.Message!.Text is null)
         {
-            // TODO create messages for scenario
-            await SendError(chat, "Введите пароль заново", ct);
+            await SendError(chat, RefreshTokenScenarioMessages.PleaseEnterPassword, ct);
             return;
         }
 
@@ -66,7 +68,9 @@ public sealed class RefreshTokenStartedState : IRefreshTokenState
         var tokenResult = await _moodleClient.LoginAsync(moodleAccount.Username, password, ct);
         if (tokenResult.IsFailure)
         {
-            await SendError(chat, tokenResult.Error!, ct);
+            _logger.LogWarning("'{Error}' occured while refreshing password for student {StudentID}",
+                tokenResult.Error, moodleAccount.StudentId);
+            await SendError(chat, RefreshTokenScenarioMessages.NotAuthorized, ct);
             return;
         }
 
