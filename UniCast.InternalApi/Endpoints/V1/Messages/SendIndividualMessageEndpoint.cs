@@ -28,9 +28,15 @@ public sealed class SendIndividualMessageEndpoint : Ep.Req<SendIndividualMessage
         var result = await _handler.HandleAsync(
             new SendIndividualMessageCommand(
                 req.Students.Select(
-                        x => new StudentModel(
-                            StudentFullName.From(x.FullName),
-                            AcademicGroupName.From(x.GroupName))
+                        x =>
+                        {
+                            string[] fullNameParts = x.FullName.Split(' ', 
+                                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                            return new StudentModel(
+                                StudentFullName.From($"{fullNameParts[1]} {fullNameParts[0]}"),
+                                AcademicGroupName.From(x.GroupName));
+                        }
                     )
                     .ToList(),
                 req.Message,
