@@ -4,7 +4,7 @@ using UniCast.Domain.Students.Entities;
 
 namespace UniCast.Domain.Moodle;
 
-public sealed class MoodleAccount : Entity<IdOf<MoodleAccount>>
+public sealed class MoodleAccount(IdOf<MoodleAccount> id) : Entity<IdOf<MoodleAccount>>(id)
 {
     public long ExtId { get; init; }
     public string Username { get; init; }

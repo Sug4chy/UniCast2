@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using UniCast.Domain.Messages.Entities;
 using UniCast.Domain.Telegram.Entities;
 using UniCast.Infrastructure.Persistence.Extensions;
 
