@@ -1,7 +1,10 @@
 using System.Net.Http.Json;
 using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Options;
 using UniCast.Application.Abstractions.Moodle;
 using UniCast.Application.Result;
+using UniCast.Domain.Students.Entities;
+using UniCast.Infrastructure.Moodle.Configuration;
 using UniCast.Infrastructure.Moodle.Errors;
 
 namespace UniCast.Infrastructure.Moodle.Client;
@@ -9,12 +12,12 @@ namespace UniCast.Infrastructure.Moodle.Client;
 public sealed class MoodleApiClient : IMoodleClient
 {
     private readonly HttpClient _httpClient;
-    private readonly string _moodleUrl;
+    private readonly MoodleConfiguration _configuration;
 
-    public MoodleApiClient(HttpClient httpClient, string moodleUrl)
+    public MoodleApiClient(HttpClient httpClient, IOptions<MoodleConfiguration> configuration)
     {
         _httpClient = httpClient;
-        _moodleUrl = moodleUrl;
+        _configuration = configuration.Value;
     }
 
     public async Task<Result<string>> LoginAsync(string username, string password, CancellationToken ct = default)
@@ -22,7 +25,7 @@ public sealed class MoodleApiClient : IMoodleClient
         try
         {
             var responseMessage = await _httpClient.PostAsync(
-                requestUri: $"{_moodleUrl}/login/token.php?username={username}&password={password}" +
+                requestUri: $"{_configuration.BaseUrl}/login/token.php?username={username}&password={password}" +
                             $"&service=moodle_mobile_app",
                 content: null,
                 cancellationToken: ct);
@@ -49,7 +52,7 @@ public sealed class MoodleApiClient : IMoodleClient
         try
         {
             var responseMessage = await _httpClient.PostAsync(
-                requestUri: $"{_moodleUrl}/webservice/rest/server.php?wstoken={senderToken}" +
+                requestUri: $"{_configuration.BaseUrl}/webservice/rest/server.php?wstoken={senderToken}" +
                             $"&wsfunction=core_message_send_instant_messages" +
                             $"&moodlewsrestformat=json" +
                             $"&messages[0][touserid]={receiverExtId}" +
@@ -74,4 +77,12 @@ public sealed class MoodleApiClient : IMoodleClient
             return UnitResult.Failure(Error.Of(e.Message));
         }
     }
+
+    public Task<UnitResult<Error>> OrderReferenceForStudentAsync(Student student, CancellationToken ct = default)
+        => SendMessageAsync(
+            senderToken: student.MoodleAccount!.CurrentToken,
+            receiverExtId: _configuration.IssuingMethodologistExtId,
+            text: "Здравствуйте, хочу заказать справку о том, что являюсь студентом",
+            ct: ct
+        );
 }

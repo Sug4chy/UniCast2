@@ -1,20 +1,21 @@
 using Autofac;
+using Microsoft.Extensions.Options;
 using UniCast.Infrastructure.Moodle.Client;
+using UniCast.Infrastructure.Moodle.Configuration;
 
 namespace UniCast.Infrastructure.Moodle;
 
 public sealed class MoodleInfrastructureModule : Module
 {
-    public required string MoodleBaseUrl { get; init; }
-
     protected override void Load(ContainerBuilder builder)
     {
         LoadMoodleApiClient(builder);
     }
 
-    private void LoadMoodleApiClient(ContainerBuilder builder)
+    private static void LoadMoodleApiClient(ContainerBuilder builder)
     {
-        builder.Register(ctx => new MoodleApiClient(ctx.Resolve<IHttpClientFactory>().CreateClient(), MoodleBaseUrl))
+        builder.Register(ctx => new MoodleApiClient(ctx.Resolve<IHttpClientFactory>().CreateClient(), 
+                ctx.Resolve<IOptions<MoodleConfiguration>>()))
             .AsImplementedInterfaces()
             .InstancePerLifetimeScope();
     }

@@ -1,6 +1,5 @@
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using UniCast.Application.Abstractions;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Messages.Commands;
 

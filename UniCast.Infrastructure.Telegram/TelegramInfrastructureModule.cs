@@ -37,7 +37,7 @@ public sealed class TelegramInfrastructureModule : Module
 
     private void LoadSetWebhookAsyncInitializer(ContainerBuilder builder)
     {
-        builder.Register(ctx => new SetWebhookAsyncInitializer(
+        builder.Register(ctx => new SetupBotAsyncInitializer(
             ctx.Resolve<ITelegramBotClient>(),
             WebhookUrl,
             CertificatePath))
