@@ -17,6 +17,8 @@
         condition: service_started
       db:
         condition: service_healthy
+      students-fetcher:
+        condition: service_completed_successfully
     networks:
       - uni-cast-network
 
@@ -35,6 +37,15 @@
     depends_on:
       db:
         condition: service_healthy
+      students-fetcher:
+        condition: service_completed_successfully
+
+  students-fetcher:
+    image: sug4chy/unicast-students-fetcher
+    environment:
+      MOODLE_BASE_URL: ${Moodle__BaseUrl}
+      MOODLE_TOKEN: ${Moodle__WsAuthToken}
+      CONNECTION_STRING: ${ConnectionStrings__DefaultConnection}
 
   db:
     image: postgres:16
