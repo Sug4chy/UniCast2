@@ -32,7 +32,7 @@ public sealed class RefreshTokenStartedState : IRefreshTokenState
         _logger = serviceProvider.GetRequiredService<ILogger<RefreshTokenStartedState>>();
     }
 
-    public async Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
+    public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         UpdatesToDispatchByChats[chat.ExtId] = update;
         MessageIdsToDeleteByChats[chat.ExtId] = new Queue<int>();
@@ -45,7 +45,7 @@ public sealed class RefreshTokenStartedState : IRefreshTokenState
         MessageIdsToDeleteByChats[chat.ExtId].Enqueue(message.ExtId);
     }
 
-    public async Task HandleUserInputAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
+    public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         if (update.Message!.Text is null)
         {
@@ -83,7 +83,7 @@ public sealed class RefreshTokenStartedState : IRefreshTokenState
             ct: ct);
     }
 
-    private async Task SendError(PrivateTelegramChat chat, string errorText, CancellationToken ct = default)
+    private async Task SendError(TelegramChat chat, string errorText, CancellationToken ct = default)
     {
         var message = await _telegramMessageManager.SendMessageAsync(
             chat: chat,

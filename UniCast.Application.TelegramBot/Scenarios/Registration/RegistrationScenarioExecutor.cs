@@ -25,7 +25,7 @@ public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrati
     public Scenario Scenario => Scenario.Registration;
 
     public async Task ChangeStateAsync(
-        PrivateTelegramChat chat,
+        TelegramChat chat,
         IRegistrationState newState,
         Update update,
         CancellationToken ct = default)
@@ -79,12 +79,11 @@ public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrati
                update.Message!.Text is not null &&
                update.Message.Text == "/start"
                && await _dataContext.TelegramChats
-                   .Cast<PrivateTelegramChat>()
                    .AnyAsync(x => x.ExtId == chatId &&
                                   x.StudentId == null, ct);
     }
 
-    public async Task ClearScenarioAsync(PrivateTelegramChat chat, CancellationToken ct = default)
+    public async Task ClearScenarioAsync(TelegramChat chat, CancellationToken ct = default)
     {
         chat.CurrentScenario = null;
         chat.CurrentState = null;
@@ -93,7 +92,7 @@ public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrati
         await _dataContext.SaveChangesAsync(ct);
     }
 
-    public Task StartScenarioAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
+    public Task StartScenarioAsync(TelegramChat chat, Update update, CancellationToken ct = default)
         => GetState((int)RegistrationScenarioState.Started)
             .OnStateChangedAsync(chat, update, ct);
 

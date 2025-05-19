@@ -25,12 +25,12 @@ public sealed class MessageFromMethodist : Entity<IdOf<MessageFromMethodist>>
     /// <summary>
     /// Список студентов, кому это сообщение адресовано
     /// </summary>
-    public ICollection<Student> Students { get; set; }
+    public ICollection<Student> Students { get; set; } = [];
 
     /// <summary>
     /// Сообщения в Telegram, которые были отправлены в рамках этой рассылки
     /// </summary>
-    public ICollection<TelegramMessage> TelegramMessages { get; init; }
+    public ICollection<TelegramMessage> TelegramMessages { get; init; } = [];
 
     public static MessageFromMethodist Create(
         IdOf<MessageFromMethodist> id,

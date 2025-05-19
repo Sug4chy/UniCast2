@@ -6,7 +6,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using Microsoft.EntityFrameworkCore;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Moodle;
 using UniCast.Domain.Students.Entities;
@@ -31,7 +30,6 @@ var usersResponse = await httpClient.GetFromJsonAsync<CoreUserGetUsersResponse>(
 
 Console.WriteLine("Users fetched...");
 
-var group = await dbContext.AcademicGroups.FirstAsync(x => x.Name == AcademicGroupName.From("ПрИ-404"));
 foreach (var user in usersResponse!.Users)
 {
     string[] studentFullNameParts = user.FullName.Split(' ',
@@ -45,8 +43,7 @@ foreach (var user in usersResponse!.Users)
 
     var student = Student.Create(
         id: IdOf<Student>.New(),
-        fullName: StudentFullName.From($"{studentFullNameParts[1]} {studentFullNameParts[0]}"),
-        group: group
+        fullName: StudentFullName.From($"{studentFullNameParts[1]} {studentFullNameParts[0]}")
     );
     var moodleAccount = new MoodleAccount(IdOf<MoodleAccount>.New())
     {

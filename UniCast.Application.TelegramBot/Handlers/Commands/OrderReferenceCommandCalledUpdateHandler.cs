@@ -81,8 +81,7 @@ public sealed class OrderReferenceCommandCalledUpdateHandler : IUpdateHandler
             .Include(x => x.MoodleAccount)
             .FirstOrDefaultAsync(x => x.TelegramChat!.ExtId == chatExtId, ct);
 
-    private Task<PrivateTelegramChat> GetTelegramChatByExtIdAsync(long chatExtId, CancellationToken ct = default)
+    private Task<TelegramChat> GetTelegramChatByExtIdAsync(long chatExtId, CancellationToken ct = default)
         => _dataContext.TelegramChats
-            .Cast<PrivateTelegramChat>()
             .FirstAsync(x => x.ExtId == chatExtId, ct);
 }

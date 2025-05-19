@@ -1,12 +1,10 @@
 using CSharpFunctionalExtensions;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Result;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Moodle;
 using UniCast.Domain.Students.Entities;
-using UniCast.Domain.Students.ValueObjects;
 
 namespace UniCast.Application.InternalApi.Command.Students.CreateStudent;
 
@@ -25,17 +23,9 @@ public sealed class CreateStudentCommandHandler : ICommandHandler<CreateStudentC
     {
         try
         {
-            var group = await GetGroupByNameAsync(command.GroupName, ct);
-            if (group is null)
-            {
-                _logger.LogError("Group with name: {GroupName} was not found", command.GroupName);
-                return UnitResult.Failure(Error.Of("Group not found", ErrorGroup.NotFound));
-            }
-
             var student = Student.Create(
                 id: IdOf<Student>.New(),
-                fullName: command.FullName,
-                group: group);
+                fullName: command.FullName);
             var moodleAccount = new MoodleAccount(IdOf<MoodleAccount>.New())
             {
                 ExtId = command.Id,
@@ -57,7 +47,4 @@ public sealed class CreateStudentCommandHandler : ICommandHandler<CreateStudentC
             return UnitResult.Failure(Error.Of(e.Message));
         }
     }
-
-    private Task<AcademicGroup?> GetGroupByNameAsync(AcademicGroupName name, CancellationToken ct = default)
-        => _dataContext.AcademicGroups.SingleOrDefaultAsync(x => x.Name == name, ct);
 }

@@ -24,10 +24,10 @@ public sealed class RegistrationMoodleUsernameEnteredState : IRegistrationState
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
 
-    public Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
+    public Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
         => Task.CompletedTask;
 
-    public async Task HandleUserInputAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
+    public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         if (update.Message!.Text is null)
         {

@@ -18,10 +18,7 @@ try
     builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
         .ConfigureContainer<ContainerBuilder>(containerBuilder =>
         {
-            containerBuilder.RegisterModule(new TelegramBotApplicationModule
-            {
-                BotUsername = builder.Configuration["TelegramBot:Username"] ?? string.Empty
-            });
+            containerBuilder.RegisterModule<TelegramBotApplicationModule>();
 
             containerBuilder.RegisterModule(new TelegramInfrastructureModule
             {

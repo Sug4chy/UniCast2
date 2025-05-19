@@ -15,12 +15,12 @@ public sealed class RefreshTokenCompletedState : IRefreshTokenState
         _updateDispatcher = serviceProvider.GetRequiredService<UpdateDispatcher>();
     }
 
-    public async Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
+    public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         await _scenarioExecutor.ClearScenarioAsync(chat, ct);
         await _updateDispatcher.DispatchAsync(update, ct);
     }
 
-    public Task HandleUserInputAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
+    public Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
         => Task.CompletedTask;
 }

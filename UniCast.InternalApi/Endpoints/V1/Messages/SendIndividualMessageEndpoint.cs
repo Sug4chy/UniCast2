@@ -2,7 +2,6 @@ using FastEndpoints;
 using FluentValidation;
 using UniCast.Application.InternalApi.Command.Messages.SendIndividualMessage;
 using UniCast.Application.InternalApi.Models;
-using UniCast.Domain.Students.ValueObjects;
 using UniCast.InternalApi.Dto;
 
 namespace UniCast.InternalApi.Endpoints.V1.Messages;
@@ -27,18 +26,7 @@ public sealed class SendIndividualMessageEndpoint : Ep.Req<SendIndividualMessage
     {
         var result = await _handler.HandleAsync(
             new SendIndividualMessageCommand(
-                req.Students.Select(
-                        x =>
-                        {
-                            string[] fullNameParts = x.FullName.Split(' ', 
-                                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-                            return new StudentModel(
-                                StudentFullName.From($"{fullNameParts[1]} {fullNameParts[0]}"),
-                                AcademicGroupName.From(x.GroupName));
-                        }
-                    )
-                    .ToList(),
+                req.Students.Select(x => new StudentModel(x.Id)).ToList(),
                 req.Message,
                 req.SenderUsername,
                 req.SenderId

@@ -80,7 +80,7 @@ public sealed class MoodleApiClient : IMoodleClient
 
     public Task<UnitResult<Error>> OrderReferenceForStudentAsync(Student student, CancellationToken ct = default)
         => SendMessageAsync(
-            senderToken: student.MoodleAccount!.CurrentToken,
+            senderToken: student.MoodleAccount!.CurrentToken!,
             receiverExtId: _configuration.IssuingMethodologistExtId,
             text: "Здравствуйте, хочу заказать справку о том, что являюсь студентом",
             ct: ct

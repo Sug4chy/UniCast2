@@ -19,7 +19,7 @@ public sealed class RegistrationStartedState : IRegistrationState
         _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
     }
 
-    public async Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
+    public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         await _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId, 
@@ -32,6 +32,6 @@ public sealed class RegistrationStartedState : IRegistrationState
             update, ct);
     }
 
-    public Task HandleUserInputAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
+    public Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
         => Task.CompletedTask;
 }

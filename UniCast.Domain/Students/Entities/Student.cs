@@ -17,32 +17,22 @@ public sealed class Student : Entity<IdOf<Student>>
     /// </summary>
     public StudentFullName FullName { get; init; }
 
-    public IdOf<AcademicGroup> GroupId { get; init; }
-
-    /// <summary>
-    /// Академическая группа, к которой принадлежит студент
-    /// </summary>
-    public AcademicGroup? Group { get; init; }
-
     /// <summary>
     /// Сообщения, адресованные студенту
     /// </summary>
-    public ICollection<MessageFromMethodist> Messages { get; init; }
+    public ICollection<MessageFromMethodist> Messages { get; init; } = [];
 
-    public PrivateTelegramChat? TelegramChat { get; init; }
+    public TelegramChat? TelegramChat { get; init; }
 
     public MoodleAccount? MoodleAccount { get; init; }
 
     public static Student Create(
         IdOf<Student> id,
-        StudentFullName fullName,
-        AcademicGroup group)
+        StudentFullName fullName)
         => new()
         {
             Id = id,
             FullName = fullName,
-            GroupId = group.Id,
-            Group = group,
             Messages = []
         };
 }

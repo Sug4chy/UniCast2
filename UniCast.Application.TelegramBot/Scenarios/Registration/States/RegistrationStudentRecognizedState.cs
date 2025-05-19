@@ -23,7 +23,7 @@ public sealed class RegistrationStudentRecognizedState : IRegistrationState
         _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
     }
 
-    public Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
+    public Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
         => _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
             text: string.Format(RegistrationScenarioMessages.ProbablyRecognizeUser,
@@ -35,7 +35,7 @@ public sealed class RegistrationStudentRecognizedState : IRegistrationState
             ]),
             ct: ct);
 
-    public async Task HandleUserInputAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
+    public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(update.CallbackQuery);
 

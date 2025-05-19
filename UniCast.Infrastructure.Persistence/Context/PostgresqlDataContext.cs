@@ -11,7 +11,6 @@ public sealed class PostgresqlDataContext(
     DbContextOptions<PostgresqlDataContext> options
 ) : DbContext(options), IDataContext
 {
-    public DbSet<AcademicGroup> AcademicGroups { get; init; }
     public DbSet<MessageFromMethodist> MessageFromMethodists { get; init; }
     public DbSet<Student> Students { get; init; }
     public DbSet<TelegramChat> TelegramChats { get; init; }

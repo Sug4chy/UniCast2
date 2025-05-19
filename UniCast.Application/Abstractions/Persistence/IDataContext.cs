@@ -8,7 +8,6 @@ namespace UniCast.Application.Abstractions.Persistence;
 
 public interface IDataContext
 {
-    DbSet<AcademicGroup> AcademicGroups { get; init; }
     DbSet<MessageFromMethodist> MessageFromMethodists { get; init; }
     DbSet<Student> Students { get; init; }
     DbSet<TelegramChat> TelegramChats { get; init; }

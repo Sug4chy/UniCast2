@@ -19,7 +19,7 @@ public sealed class RefreshTokenScenarioExecutor : IScenarioExecutor<IRefreshTok
 
     public Scenario Scenario => Scenario.RefreshToken;
 
-    public async Task StartScenarioAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
+    public async Task StartScenarioAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         chat.CurrentScenario = Scenario.RefreshToken;
         chat.CurrentState = (int)RefreshTokenScenarioState.Started;
@@ -37,7 +37,7 @@ public sealed class RefreshTokenScenarioExecutor : IScenarioExecutor<IRefreshTok
             _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)
         };
 
-    public async Task ClearScenarioAsync(PrivateTelegramChat chat, CancellationToken ct = default)
+    public async Task ClearScenarioAsync(TelegramChat chat, CancellationToken ct = default)
     {
         chat.CurrentScenario = null;
         chat.CurrentState = null;
@@ -46,7 +46,7 @@ public sealed class RefreshTokenScenarioExecutor : IScenarioExecutor<IRefreshTok
         await _dataContext.SaveChangesAsync(ct);
     }
 
-    public async Task ChangeStateAsync(PrivateTelegramChat chat, IRefreshTokenState newState, Update update,
+    public async Task ChangeStateAsync(TelegramChat chat, IRefreshTokenState newState, Update update,
         CancellationToken ct = default)
     {
         chat.CurrentState = GetState(newState);

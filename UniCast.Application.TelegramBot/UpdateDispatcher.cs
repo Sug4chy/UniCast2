@@ -89,9 +89,9 @@ public sealed class UpdateDispatcher
         return null;
     }
 
-    private async Task<PrivateTelegramChat> CreateFromUpdateAsync(Update update, CancellationToken ct = default)
+    private async Task<TelegramChat> CreateFromUpdateAsync(Update update, CancellationToken ct = default)
     {
-        var chat = PrivateTelegramChat.CreateNew(
+        var chat = TelegramChat.CreateNew(
             IdOf<TelegramChat>.New(),
             update.Message!.Chat.Username!,
             update.Message!.Chat.Id
@@ -103,9 +103,9 @@ public sealed class UpdateDispatcher
         return chat;
     }
 
-    private Task<PrivateTelegramChat?> GetPrivateChatByExtIdAsync(long chatExtId, CancellationToken ct = default)
+    private Task<TelegramChat?> GetPrivateChatByExtIdAsync(long chatExtId, CancellationToken ct = default)
         => _dataContext.TelegramChats
-            .Cast<PrivateTelegramChat>()
+            .Cast<TelegramChat>()
             .SingleOrDefaultAsync(x => x.ExtId == chatExtId, ct);
 
     private async Task<IScenarioExecutor?> GetScenarioExecutorForUpdateAsync(

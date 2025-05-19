@@ -29,7 +29,6 @@ public sealed class CreateStudentEndpoint : Ep.Req<CreateStudentRequest>.NoRes
         var result = await _handler.HandleAsync(new CreateStudentCommand(
             Id: req.Id,
             FullName: StudentFullName.From($"{studentFullnameParts[1]} {studentFullnameParts[0]}"),
-            GroupName: AcademicGroupName.From(req.GroupName),
             Username: req.Username
         ), ct);
 
@@ -46,7 +45,6 @@ public sealed class CreateStudentEndpoint : Ep.Req<CreateStudentRequest>.NoRes
 public readonly record struct CreateStudentRequest(
     long Id,
     string FullName,
-    string GroupName,
     string Username
 );
 
@@ -56,7 +54,6 @@ public sealed class CreateStudentRequestValidator : AbstractValidator<CreateStud
     {
         RuleFor(x => x.Id).GreaterThan(0);
         RuleFor(x => x.FullName).NotEmpty();
-        RuleFor(x => x.GroupName).NotEmpty();
         RuleFor(x => x.Username).NotEmpty();
     }
 }

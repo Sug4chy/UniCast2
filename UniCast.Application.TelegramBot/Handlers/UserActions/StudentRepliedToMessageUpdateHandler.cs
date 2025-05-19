@@ -11,7 +11,6 @@ using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Messages.Entities;
 using UniCast.Domain.Students.Entities;
 using UniCast.Domain.Telegram.Entities;
-using UniCast.Domain.Telegram.ValueObjects.Enums;
 
 namespace UniCast.Application.TelegramBot.Handlers.UserActions;
 
@@ -80,7 +79,7 @@ public sealed class StudentRepliedToMessageUpdateHandler : IUpdateHandler
         );
 
         var sendMessageResult = await _moodleClient.SendMessageAsync(
-            senderToken: student.MoodleAccount!.CurrentToken,
+            senderToken: student.MoodleAccount!.CurrentToken!,
             receiverExtId: message.SenderExtId,
             text: reply.ReplyText,
             ct: ct);
@@ -116,8 +115,7 @@ public sealed class StudentRepliedToMessageUpdateHandler : IUpdateHandler
     private Task<bool> MessageExistsByIdsPairAsync(long chatExtId, int messageExtId, CancellationToken ct = default)
         => _dataContext.TelegramMessages
             .AnyAsync(x => x.ExtId == messageExtId &&
-                           x.Chat!.Type == TelegramChatType.Private &&
-                           x.Chat.ExtId == chatExtId, ct);
+                           x.Chat!.ExtId == chatExtId, ct);
 
     private Task<MessageFromMethodist?> GetMessageFromMethodistByTelegramMessageIdsAsync(
         long chatExtId,
@@ -134,8 +132,8 @@ public sealed class StudentRepliedToMessageUpdateHandler : IUpdateHandler
             .Include(x => x.MoodleAccount)
             .SingleOrDefaultAsync(x => x.TelegramChat!.ExtId == chatExtId, ct);
 
-    private Task<PrivateTelegramChat> GetChatByExtIdAsync(long chatExtId, CancellationToken ct = default)
+    private Task<TelegramChat> GetChatByExtIdAsync(long chatExtId, CancellationToken ct = default)
         => _dataContext.TelegramChats
-            .Cast<PrivateTelegramChat>()
+            .Cast<TelegramChat>()
             .SingleAsync(x => x.ExtId == chatExtId, ct);
 }

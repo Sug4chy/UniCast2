@@ -30,7 +30,7 @@ public sealed class RegistrationWaitingForMoodlePasswordEnteredState : IRegistra
         _moodleClient = serviceProvider.GetRequiredService<IMoodleClient>();
     }
 
-    public async Task OnStateChangedAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
+    public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         var message = await _telegramMessageManager.SendMessageAsync(
             chat: chat,
@@ -43,7 +43,7 @@ public sealed class RegistrationWaitingForMoodlePasswordEnteredState : IRegistra
         await _dataContext.SaveChangesAsync(ct);
     }
 
-    public async Task HandleUserInputAsync(PrivateTelegramChat chat, Update update, CancellationToken ct = default)
+    public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         if (update.Message!.Text is null)
         {
@@ -80,7 +80,7 @@ public sealed class RegistrationWaitingForMoodlePasswordEnteredState : IRegistra
             ct: ct);
     }
 
-    private async Task SendError(PrivateTelegramChat chat, string errorText, CancellationToken ct = default)
+    private async Task SendError(TelegramChat chat, string errorText, CancellationToken ct = default)
     {
         var message = await _telegramMessageManager.SendMessageAsync(
             chat: chat,

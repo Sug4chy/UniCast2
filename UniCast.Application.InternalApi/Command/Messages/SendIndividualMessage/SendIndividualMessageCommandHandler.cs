@@ -1,15 +1,12 @@
 using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.Result;
-using UniCast.Application.Utlis;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Messages.Entities;
 using UniCast.Domain.Students.Entities;
-using UniCast.Domain.Students.ValueObjects;
 using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.InternalApi.Command.Messages.SendIndividualMessage;
@@ -37,10 +34,10 @@ public sealed class SendIndividualMessageCommandHandler : ICommandHandler<SendIn
         List<Student> students = [];
         foreach (var studentModel in command.Students)
         {
-            var student = await GetStudentByFullNameAsync(studentModel.FullName, ct);
+            var student = await GetStudentByExtIdAsync(studentModel.Id, ct);
             if (student is null)
             {
-                _logger.LogWarning("Student with name {StudentName} wasn't found", studentModel.FullName);
+                _logger.LogWarning("Student with ext ID {ID} wasn't found", studentModel.Id);
                 continue;
             }
 
@@ -71,7 +68,7 @@ public sealed class SendIndividualMessageCommandHandler : ICommandHandler<SendIn
                 continue;
             }
 
-            var message = await _telegramMessageManager.SendMessageAsync(chat, command.Message, GetInlineKeyboard(), ct);
+            var message = await _telegramMessageManager.SendMessageAsync(chat, command.Message, ct: ct);
             message.SrcMessageId = messageFromMethodistResult.Value.Id;
             _dataContext.TelegramMessages.Add(message);
         }
@@ -81,21 +78,11 @@ public sealed class SendIndividualMessageCommandHandler : ICommandHandler<SendIn
         return UnitResult.Success<Error>();
     }
 
-    private Task<Student?> GetStudentByFullNameAsync(StudentFullName fullName, CancellationToken ct = default)
+    private Task<Student?> GetStudentByExtIdAsync(long extId, CancellationToken ct = default)
         => _dataContext.Students
-            .Include(x => x.Group)
-            .SingleOrDefaultAsync(x => x.FullName == fullName, ct);
+            .SingleOrDefaultAsync(x => x.MoodleAccount!.ExtId == extId, ct);
 
-    private Task<PrivateTelegramChat?> GetPrivateChatForStudentAsync(Student student, CancellationToken ct = default)
+    private Task<TelegramChat?> GetPrivateChatForStudentAsync(Student student, CancellationToken ct = default)
         => _dataContext.TelegramChats
-            .Cast<PrivateTelegramChat>()
             .SingleOrDefaultAsync(x => x.Student == student, ct);
-
-    private static InlineKeyboardMarkup GetInlineKeyboard()
-        => new(
-            (IEnumerable<InlineKeyboardButton>)
-            [
-                new InlineKeyboardButton(TelegramConstants.ThumbUpReaction, TelegramConstants.ThumbUpReaction),
-                new InlineKeyboardButton(TelegramConstants.ThumbDownReaction, TelegramConstants.ThumbDownReaction),
-            ]);
 }

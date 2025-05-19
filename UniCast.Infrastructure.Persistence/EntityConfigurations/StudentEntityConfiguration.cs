@@ -21,14 +21,5 @@ public sealed class StudentEntityConfiguration : IEntityTypeConfiguration<Studen
                 str => StudentFullName.From(str)
             )
             .HasColumnName(nameof(Student.FullName).ToSnakeCase());
-
-        builder.Property(x => x.GroupId)
-            .IsRequired()
-            .HasDefaultIdConversion()
-            .HasColumnName(nameof(Student.GroupId).ToSnakeCase());
-
-        builder.HasOne(x => x.Group)
-            .WithMany(x => x.Students)
-            .HasForeignKey(x => x.GroupId);
     }
 }

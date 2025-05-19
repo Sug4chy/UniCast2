@@ -1,23 +1,17 @@
 using FluentValidation;
-using UniCast.Domain.Students.ValueObjects;
 
 namespace UniCast.InternalApi.Dto;
 
 public readonly record struct StudentDto(
-    string FullName,
-    string GroupName
+    long Id
 );
 
 public sealed class StudentDtoValidator : AbstractValidator<StudentDto>
 {
     public StudentDtoValidator()
     {
-        RuleFor(x => x.FullName)
+        RuleFor(x => x.Id)
             .NotEmpty()
-            .Must(StudentFullName.IsValid);
-
-        RuleFor(x => x.GroupName)
-            .NotEmpty()
-            .Must(AcademicGroupName.IsValid);
+            .GreaterThan(0);
     }
 }
