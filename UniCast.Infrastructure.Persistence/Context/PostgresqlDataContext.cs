@@ -15,7 +15,6 @@ public sealed class PostgresqlDataContext(
     public DbSet<Student> Students { get; init; }
     public DbSet<TelegramChat> TelegramChats { get; init; }
     public DbSet<TelegramMessage> TelegramMessages { get; init; }
-    public DbSet<TelegramMessageReaction> TelegramMessageReactions { get; init; }
     public DbSet<MoodleAccount> MoodleAccounts { get; init; }
     public DbSet<StudentsReply> StudentsReplies { get; init; }
 

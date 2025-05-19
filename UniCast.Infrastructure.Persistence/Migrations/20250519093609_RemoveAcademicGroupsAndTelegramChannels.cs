@@ -12,23 +12,15 @@ namespace UniCast.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_student_academic_group_group_id",
+                name: "student_group_id_fkey",
                 table: "student");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_telegram_chat_academic_group_group_id",
+                name: "telegram_chat_group_id_fkey",
                 table: "telegram_chat");
 
             migrationBuilder.DropTable(
                 name: "academic_group");
-
-            migrationBuilder.DropIndex(
-                name: "IX_telegram_chat_group_id",
-                table: "telegram_chat");
-
-            migrationBuilder.DropIndex(
-                name: "IX_student_group_id",
-                table: "student");
 
             migrationBuilder.DropColumn(
                 name: "group_id",
@@ -47,7 +39,7 @@ namespace UniCast.Infrastructure.Persistence.Migrations
                 table: "telegram_chat",
                 type: "jsonb",
                 nullable: false,
-                defaultValue: "",
+                defaultValue: "{}",
                 oldClrType: typeof(string),
                 oldType: "jsonb",
                 oldNullable: true);

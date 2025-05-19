@@ -15,8 +15,6 @@
     depends_on:
       nginx:
         condition: service_started
-      db:
-        condition: service_healthy
       students-fetcher:
         condition: service_completed_successfully
     networks:
@@ -35,8 +33,6 @@
     networks:
       - uni-cast-network
     depends_on:
-      db:
-        condition: service_healthy
       students-fetcher:
         condition: service_completed_successfully
 
@@ -46,6 +42,11 @@
       MOODLE_BASE_URL: ${Moodle__BaseUrl}
       MOODLE_TOKEN: ${Moodle__WsAuthToken}
       CONNECTION_STRING: ${ConnectionStrings__DefaultConnection}
+    networks:
+      - uni-cast-network
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
 
   db:
     image: postgres:16
@@ -62,6 +63,17 @@
       - uni-cast-network
     volumes:
       - postgres-data:/var/lib/postgresql/data
+
+  migrator:
+    image: sug4chy/unicast-migrator
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
+    networks:
+      - uni-cast-network
+    depends_on:
+      db:
+        condition: service_healthy
 
   nginx:
     image: nginx
