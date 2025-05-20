@@ -7,6 +7,8 @@
       ACCEPT_EULA: Y
     volumes:
       - seq-data:/data
+    networks:
+      - uni-cast-network
 
   telegram-bot:
     image: sug4chy/unicast-telegram-bot
