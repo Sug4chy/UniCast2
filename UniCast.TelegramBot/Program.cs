@@ -15,6 +15,7 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+
     builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
         .ConfigureContainer<ContainerBuilder>(containerBuilder =>
         {
@@ -34,7 +35,7 @@ try
             containerBuilder.RegisterModule<MoodleInfrastructureModule>();
         });
 
-    builder.Host.UseSerilog((_, lc) => { lc.WriteTo.Console(); });
+    builder.Host.UseSerilog((_, lc) => { lc.WriteTo.Console().WriteTo.Seq(builder.Configuration["Seq:Url"]!); });
     builder.Services.AddHttpClient();
 
     builder.Services.ConfigureTelegramBot<Microsoft.AspNetCore.Http.Json.JsonOptions>(opt => opt.SerializerOptions);

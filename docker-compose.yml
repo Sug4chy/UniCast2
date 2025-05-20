@@ -1,4 +1,13 @@
 ﻿services:
+
+  seq:
+    image: datalust/seq
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: Y
+    volumes:
+      - seq-data:/data
+
   telegram-bot:
     image: sug4chy/unicast-telegram-bot
     environment:
@@ -88,6 +97,7 @@
 
 volumes:
   postgres-data:
+  seq-data:
 
 networks:
   uni-cast-network:

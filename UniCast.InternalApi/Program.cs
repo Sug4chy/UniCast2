@@ -13,6 +13,7 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+
     builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory())
         .ConfigureContainer<ContainerBuilder>(containerBuilder =>
         {
@@ -30,10 +31,7 @@ try
             });
         });
 
-    builder.Host.UseSerilog((_, lc) =>
-    {
-        lc.WriteTo.Console();
-    });
+    builder.Host.UseSerilog((_, lc) => { lc.WriteTo.Console().WriteTo.Seq(builder.Configuration["Seq:Url"]!); });
 
     builder.Services.AddFastEndpoints();
     builder.Services.AddRouting(options => options.LowercaseUrls = true);
