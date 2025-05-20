@@ -1,4 +1,13 @@
 ﻿services:
+
+  seq:
+    image: datalust/seq
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: Y
+    volumes:
+      - seq-data:/data
+
   telegram-bot:
     image: sug4chy/unicast-telegram-bot
     environment:
@@ -10,6 +19,7 @@
       Moodle__IssuingMethodologistExtId: ${Moodle__IssuingMethodologistExtId}
       WEBHOOK_CERTIFICATE_PATH: "/certificates/public.pem"
       WEBHOOK_URL: ${WEBHOOK_URL}
+      Seq__Url: ${Seq__Url}
     restart: on-failure
     volumes:
       - ./certificates.public.pem/:/certificates/public.pem
@@ -30,6 +40,7 @@
       TelegramBot__Token: ${TelegramBot__Token}
       TelegramBot__Username: ${TelegramBot__Username}
       ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
+      Seq__Url: ${Seq__Url}
     restart: on-failure
     networks:
       - uni-cast-network
@@ -88,6 +99,7 @@
 
 volumes:
   postgres-data:
+  seq-data:
 
 networks:
   uni-cast-network:
