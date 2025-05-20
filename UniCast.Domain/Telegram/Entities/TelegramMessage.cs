@@ -15,15 +15,12 @@ public sealed class TelegramMessage : Entity<IdOf<TelegramMessage>>
     public static TelegramMessage Create(
         IdOf<TelegramMessage> id,
         int extId,
-        TelegramChat chat,
-        MessageFromMethodist srcMessage)
+        TelegramChat chat)
         => new()
         {
             Id = id,
             ExtId = extId,
             ChatId = chat.Id,
-            Chat = chat,
-            SrcMessage = srcMessage,
-            SrcMessageId = srcMessage.Id,
+            Chat = chat
         };
 }

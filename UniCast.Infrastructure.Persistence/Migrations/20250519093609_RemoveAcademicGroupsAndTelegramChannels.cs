@@ -12,15 +12,23 @@ namespace UniCast.Infrastructure.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "student_group_id_fkey",
+                name: "FK_student_academic_group_group_id",
                 table: "student");
 
             migrationBuilder.DropForeignKey(
-                name: "telegram_chat_group_id_fkey",
+                name: "FK_telegram_chat_academic_group_group_id",
                 table: "telegram_chat");
 
             migrationBuilder.DropTable(
                 name: "academic_group");
+
+            migrationBuilder.DropIndex(
+                name: "IX_telegram_chat_group_id",
+                table: "telegram_chat");
+
+            migrationBuilder.DropIndex(
+                name: "IX_student_group_id",
+                table: "student");
 
             migrationBuilder.DropColumn(
                 name: "group_id",

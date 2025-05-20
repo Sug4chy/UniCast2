@@ -31,7 +31,7 @@ public sealed class RegistrationStudentRecognizedState : IRegistrationState
             inlineKeyboard: new InlineKeyboardMarkup((IEnumerable<InlineKeyboardButton>)
             [
                 new InlineKeyboardButton(Yes, Yes),
-                new InlineKeyboardButton(Yes, Yes)
+                new InlineKeyboardButton(No, No)
             ]),
             ct: ct);
 

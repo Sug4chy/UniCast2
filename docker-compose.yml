@@ -9,6 +9,7 @@
       Moodle__BaseUrl: ${Moodle__BaseUrl}
       Moodle__IssuingMethodologistExtId: ${Moodle__IssuingMethodologistExtId}
       WEBHOOK_CERTIFICATE_PATH: "/certificates/public.pem"
+      WEBHOOK_URL: ${WEBHOOK_URL}
     restart: on-failure
     volumes:
       - ./certificates.public.pem/:/certificates/public.pem

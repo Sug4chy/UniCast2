@@ -6,6 +6,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using Microsoft.EntityFrameworkCore;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Moodle;
 using UniCast.Domain.Students.Entities;
@@ -32,6 +33,12 @@ Console.WriteLine("Users fetched...");
 
 foreach (var user in usersResponse!.Users)
 {
+    if (await dbContext.MoodleAccounts.AnyAsync(x => x.ExtId == user.Id))
+    {
+        Console.WriteLine($"User with external ID {user.Id} already exists");
+        continue;
+    }
+
     string[] studentFullNameParts = user.FullName.Split(' ',
         StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 

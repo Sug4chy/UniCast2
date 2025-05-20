@@ -15,7 +15,7 @@ var definiteEnvMigrationNameRegex = new Regex(
 
 var configuration =  new ConfigurationBuilder()
     .AddEnvironmentVariables()
-    .AddJsonFile($"appsettings.{envName}.json")
+    .AddJsonFile($"appsettings.{envName}.json", optional: true)
     .Build();
 
 string? connectionString = configuration.GetConnectionString("DefaultConnection");

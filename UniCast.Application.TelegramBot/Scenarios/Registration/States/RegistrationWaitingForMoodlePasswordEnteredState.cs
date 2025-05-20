@@ -55,8 +55,14 @@ public sealed class RegistrationWaitingForMoodlePasswordEnteredState : IRegistra
             chat.CurrentScenarioArgs[RegistrationScenarioArgsKeys.MoodleUsername], ct);
         string password = update.Message!.Text!;
 
-        MessageIdsToDeleteByChats[chat.ExtId].Enqueue(update.Message.Id);
-        while (MessageIdsToDeleteByChats[chat.ExtId].TryDequeue(out int messageId))
+        if (!MessageIdsToDeleteByChats.TryGetValue(chat.ExtId, out var value))
+        {
+            value = new Queue<int>();
+            MessageIdsToDeleteByChats[chat.ExtId] = value;
+        }
+
+        value.Enqueue(update.Message.Id);
+        while (value.TryDequeue(out int messageId))
         {
             await _telegramMessageManager.DeleteMessageAsync(
                 chatId: chat.ExtId,

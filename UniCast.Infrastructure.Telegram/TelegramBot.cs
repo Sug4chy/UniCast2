@@ -44,8 +44,7 @@ public sealed class TelegramBot : ITelegramMessageManager
         return TelegramMessage.Create(
             id: IdOf<TelegramMessage>.New(),
             extId: message.Id,
-            chat: chat,
-            srcMessage: null!
+            chat: chat
         );
     }
 

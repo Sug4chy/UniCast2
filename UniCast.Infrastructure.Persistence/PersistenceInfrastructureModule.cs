@@ -1,7 +1,6 @@
 using Autofac;
 using UniCast.Infrastructure.Persistence.Context;
 using UniCast.Infrastructure.Persistence.Context.Options;
-using UniCast.Infrastructure.Persistence.Initialization;
 
 namespace UniCast.Infrastructure.Persistence;
 
@@ -12,7 +11,6 @@ public sealed class PersistenceInfrastructureModule : Module
     protected override void Load(ContainerBuilder builder)
     {
         LoadDataContext(builder);
-        LoadMigrationsAsyncInitializer(builder);
     }
 
     private void LoadDataContext(ContainerBuilder builder)
@@ -22,12 +20,5 @@ public sealed class PersistenceInfrastructureModule : Module
             .AsImplementedInterfaces()
             .AsSelf()
             .InstancePerLifetimeScope();
-    }
-
-    private static void LoadMigrationsAsyncInitializer(ContainerBuilder builder)
-    {
-        builder.RegisterType<MigrationsAsyncInitializer>()
-            .AsImplementedInterfaces()
-            .SingleInstance();
     }
 }
