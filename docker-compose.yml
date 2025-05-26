@@ -98,6 +98,9 @@
       - uni-cast-network
     ports:
       - "8443:443"
+    depends_on:
+      telegram-bot:
+        condition: service_started
 
 volumes:
   postgres-data:

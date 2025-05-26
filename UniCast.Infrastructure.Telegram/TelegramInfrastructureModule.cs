@@ -1,4 +1,5 @@
 using Autofac;
+using Microsoft.AspNetCore.Hosting;
 using Telegram.Bot;
 using UniCast.Infrastructure.Telegram.Initialization;
 
@@ -38,9 +39,10 @@ public sealed class TelegramInfrastructureModule : Module
     private void LoadSetWebhookAsyncInitializer(ContainerBuilder builder)
     {
         builder.Register(ctx => new SetupBotAsyncInitializer(
-            ctx.Resolve<ITelegramBotClient>(),
-            WebhookUrl,
-            CertificatePath))
+                ctx.Resolve<ITelegramBotClient>(),
+                ctx.Resolve<IWebHostEnvironment>(),
+                WebhookUrl,
+                CertificatePath))
             .AsImplementedInterfaces()
             .SingleInstance();
     }

@@ -5,7 +5,7 @@ using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Handlers;
 using UniCast.Application.TelegramBot.Scenarios;
-using UniCast.Application.TelegramBot.Utlis;
+using UniCast.Application.TelegramBot.Utils;
 using UniCast.Domain.Common.ValueObjects;
 using UniCast.Domain.Telegram.Entities;
 

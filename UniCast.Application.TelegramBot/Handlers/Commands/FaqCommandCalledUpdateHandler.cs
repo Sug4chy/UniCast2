@@ -1,5 +1,6 @@
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Messages.Commands;
 
@@ -23,6 +24,8 @@ public sealed class FaqCommandCalledUpdateHandler : IUpdateHandler
     public Task HandleAsync(Update update, CancellationToken ct = default)
         => _telegramMessageManager.SendMessageAsync(
             chatId: update.Message!.Chat.Id,
-            text: FaqCommandMessages.Response,
+            text: FaqCommandMessages.NewResponse,
+            inlineKeyboard: new InlineKeyboardMarkup(
+                InlineKeyboardButton.WithUrl("Не нашли ответ на интересующий вопрос?", "https://iit.csu.ru/")),
             ct: ct);
 }

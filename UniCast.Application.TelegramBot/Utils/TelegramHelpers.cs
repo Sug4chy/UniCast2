@@ -1,7 +1,7 @@
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
-namespace UniCast.Application.TelegramBot.Utlis;
+namespace UniCast.Application.TelegramBot.Utils;
 
 public static class TelegramHelpers
 {

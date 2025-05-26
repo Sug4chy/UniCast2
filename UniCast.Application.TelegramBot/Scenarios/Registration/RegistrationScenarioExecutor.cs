@@ -3,7 +3,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.TelegramBot.Scenarios.Registration.States;
-using UniCast.Application.TelegramBot.Utlis;
+using UniCast.Application.TelegramBot.Utils;
 using UniCast.Domain.Telegram.Entities;
 using UniCast.Domain.Telegram.ValueObjects.Enums;
 
