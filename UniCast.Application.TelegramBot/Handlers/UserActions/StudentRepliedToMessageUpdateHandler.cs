@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using UniCast.Application.Abstractions.Cache;
 using UniCast.Application.Abstractions.Moodle;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
@@ -20,6 +21,7 @@ public sealed class StudentRepliedToMessageUpdateHandler : IUpdateHandler
     private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly IMoodleClient _moodleClient;
     private readonly RefreshTokenScenarioExecutor _refreshTokenScenarioExecutor;
+    private readonly ICacheAccessor _cache;
     private readonly ILogger<StudentRepliedToMessageUpdateHandler> _logger;
 
     public StudentRepliedToMessageUpdateHandler(
@@ -27,12 +29,14 @@ public sealed class StudentRepliedToMessageUpdateHandler : IUpdateHandler
         ITelegramMessageManager telegramMessageManager,
         IMoodleClient moodleClient,
         RefreshTokenScenarioExecutor refreshTokenScenarioExecutor,
+        ICacheAccessor cache,
         ILogger<StudentRepliedToMessageUpdateHandler> logger)
     {
         _dataContext = dataContext;
         _telegramMessageManager = telegramMessageManager;
         _moodleClient = moodleClient;
         _refreshTokenScenarioExecutor = refreshTokenScenarioExecutor;
+        _cache = cache;
         _logger = logger;
     }
 
@@ -105,6 +109,8 @@ public sealed class StudentRepliedToMessageUpdateHandler : IUpdateHandler
 
         _dataContext.StudentsReplies.Add(reply);
         await _dataContext.SaveChangesAsync(ct);
+
+        await _cache.PutAsync(sendMessageResult.Value.ToString(), sendMessageResult.Value, ct);
 
         await _telegramMessageManager.SendMessageAsync(
             chatId: update.Message.Chat.Id,

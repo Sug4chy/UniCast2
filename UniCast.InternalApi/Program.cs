@@ -3,6 +3,7 @@ using Autofac.Extensions.DependencyInjection;
 using FastEndpoints;
 using Serilog;
 using UniCast.Application.InternalApi;
+using UniCast.Infrastructure.Caching;
 using UniCast.Infrastructure.Persistence;
 using UniCast.Infrastructure.Telegram;
 
@@ -29,6 +30,7 @@ try
             {
                 ConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty
             });
+            containerBuilder.RegisterModule<CachingInfrastructureModule>();
         });
 
     builder.Host.UseSerilog((_, lc) => { lc.WriteTo.Console().WriteTo.Seq(builder.Configuration["Seq:Url"]!); });
@@ -37,6 +39,8 @@ try
     builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
     builder.Services.AddAsyncInitialization();
+
+    builder.Services.AddMemoryCache();
 
     var app = builder.Build();
     app.UseSerilogRequestLogging();

@@ -6,5 +6,6 @@ public readonly record struct SendIndividualMessageCommand(
     List<StudentModel> Students,
     string Message,
     string From,
-    int SenderId
+    int SenderId,
+    long MessageId
 ) : ICommand;

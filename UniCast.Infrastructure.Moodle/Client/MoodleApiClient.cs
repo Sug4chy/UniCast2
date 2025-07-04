@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Options;
 using UniCast.Application.Abstractions.Moodle;
@@ -6,6 +7,7 @@ using UniCast.Application.Result;
 using UniCast.Domain.Students.Entities;
 using UniCast.Infrastructure.Moodle.Configuration;
 using UniCast.Infrastructure.Moodle.Errors;
+using UniCast.Infrastructure.Moodle.Responses;
 
 namespace UniCast.Infrastructure.Moodle.Client;
 
@@ -43,7 +45,7 @@ public sealed class MoodleApiClient : IMoodleClient
         }
     }
 
-    public async Task<UnitResult<Error>> SendMessageAsync(
+    public async Task<Result<long, Error>> SendMessageAsync(
         string senderToken,
         int receiverExtId,
         string text,
@@ -66,23 +68,29 @@ public sealed class MoodleApiClient : IMoodleClient
             if (!(responseString.StartsWith('[') && responseString.EndsWith(']')))
             {
                 return AccessError.TryParse(responseString, out var error)
-                    ? UnitResult.Failure(Error.Of(error.Message, ErrorGroup.AccessError))
-                    : UnitResult.Failure(Error.Of(responseString));
+                    ? Result.Failure<long, Error>(Error.Of(error.Message, ErrorGroup.AccessError))
+                    : Result.Failure<long, Error>(Error.Of(responseString));
             }
 
-            return UnitResult.Success<Error>();
+            var deserializedResponse = JsonSerializer.Deserialize<SentMessageInfo[]>(responseString)!;
+
+            return Result.Success<long, Error>(deserializedResponse[0].MessageId);
         }
         catch (Exception e)
         {
-            return UnitResult.Failure(Error.Of(e.Message));
+            return Result.Failure<long, Error>(Error.Of(e.Message));
         }
     }
 
-    public Task<UnitResult<Error>> OrderReferenceForStudentAsync(Student student, CancellationToken ct = default)
-        => SendMessageAsync(
+    public async Task<UnitResult<Error>> OrderReferenceForStudentAsync(Student student, CancellationToken ct = default)
+    {
+        var result = await SendMessageAsync(
             senderToken: student.MoodleAccount!.CurrentToken!,
             receiverExtId: _configuration.IssuingMethodologistExtId,
             text: "Здравствуйте, хочу заказать справку о том, что являюсь студентом",
             ct: ct
         );
+
+        return result.IsSuccess ? UnitResult.Success<Error>() : UnitResult.Failure(result.Error);
+    }
 }

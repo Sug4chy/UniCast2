@@ -11,7 +11,7 @@ public interface IMoodleClient
         string password,
         CancellationToken ct = default);
 
-    Task<UnitResult<Error>> SendMessageAsync(
+    Task<Result<long, Error>> SendMessageAsync(
         string senderToken,
         int receiverExtId,
         string text,

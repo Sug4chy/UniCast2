@@ -3,6 +3,7 @@ using Autofac.Extensions.DependencyInjection;
 using FastEndpoints;
 using Serilog;
 using UniCast.Application.TelegramBot;
+using UniCast.Infrastructure.Caching;
 using UniCast.Infrastructure.Moodle;
 using UniCast.Infrastructure.Moodle.Configuration;
 using UniCast.Infrastructure.Persistence;
@@ -33,10 +34,13 @@ try
                 ConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty
             });
             containerBuilder.RegisterModule<MoodleInfrastructureModule>();
+            containerBuilder.RegisterModule<CachingInfrastructureModule>();
         });
 
     builder.Host.UseSerilog((_, lc) => { lc.WriteTo.Console().WriteTo.Seq(builder.Configuration["Seq:Url"]!); });
     builder.Services.AddHttpClient();
+
+    builder.Services.AddMemoryCache();
 
     builder.Services.ConfigureTelegramBot<Microsoft.AspNetCore.Http.Json.JsonOptions>(opt => opt.SerializerOptions);
     builder.Services.Configure<MoodleConfiguration>(builder.Configuration.GetSection("Moodle"));

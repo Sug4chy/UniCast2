@@ -18,6 +18,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\UniCast.Application.InternalApi\UniCast.Application.InternalApi.csproj" />
+      <ProjectReference Include="..\UniCast.Infrastructure.Caching\UniCast.Infrastructure.Caching.csproj" />
       <ProjectReference Include="..\UniCast.Infrastructure.Persistence\UniCast.Infrastructure.Persistence.csproj" />
       <ProjectReference Include="..\UniCast.Infrastructure.Telegram\UniCast.Infrastructure.Telegram.csproj" />
     </ItemGroup>

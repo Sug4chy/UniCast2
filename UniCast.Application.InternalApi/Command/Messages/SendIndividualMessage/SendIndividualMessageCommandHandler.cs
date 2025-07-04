@@ -1,6 +1,7 @@
 using CSharpFunctionalExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using UniCast.Application.Abstractions.Cache;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.Result;
@@ -15,15 +16,18 @@ public sealed class SendIndividualMessageCommandHandler : ICommandHandler<SendIn
 {
     private readonly IDataContext _dataContext;
     private readonly ITelegramMessageManager _telegramMessageManager;
+    private readonly ICacheAccessor _cache;
     private readonly ILogger<SendIndividualMessageCommandHandler> _logger;
 
     public SendIndividualMessageCommandHandler(
         IDataContext dataContext,
         ITelegramMessageManager telegramMessageManager,
+        ICacheAccessor cache,
         ILogger<SendIndividualMessageCommandHandler> logger)
     {
         _dataContext = dataContext;
         _telegramMessageManager = telegramMessageManager;
+        _cache = cache;
         _logger = logger;
     }
 
@@ -31,6 +35,12 @@ public sealed class SendIndividualMessageCommandHandler : ICommandHandler<SendIn
         SendIndividualMessageCommand command,
         CancellationToken ct = default)
     {
+        if (await _cache.GetAsync<string>(command.MessageId.ToString(), ct) is not null)
+        {
+            _logger.LogInformation("Got mirrored message with ID {ID}", command.MessageId);
+            return UnitResult.Success<Error>();
+        }
+
         List<Student> students = [];
         foreach (var studentModel in command.Students)
         {
