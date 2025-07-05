@@ -46,7 +46,7 @@ public sealed class UpdateDispatcher
                 return;
             }
 
-            var chat = await GetPrivateChatByExtIdAsync(TelegramHelpers.GetChatId(update, ExceptionToIgnore), ct)
+            var chat = await GetChatByExtIdAsync(TelegramHelpers.GetChatId(update, ExceptionToIgnore), ct)
                        ?? await CreateFromUpdateAsync(update, ct);
 
             if (chat.CurrentScenario is null)
@@ -103,10 +103,9 @@ public sealed class UpdateDispatcher
         return chat;
     }
 
-    private Task<TelegramChat?> GetPrivateChatByExtIdAsync(long chatExtId, CancellationToken ct = default)
+    private Task<TelegramChat?> GetChatByExtIdAsync(long chatExtId, CancellationToken ct = default)
         => _dataContext.TelegramChats
-            .Cast<TelegramChat>()
-            .SingleOrDefaultAsync(x => x.ExtId == chatExtId, ct);
+            .FirstOrDefaultAsync(x => x.ExtId == chatExtId, ct);
 
     private async Task<IScenarioExecutor?> GetScenarioExecutorForUpdateAsync(
         Update update,
