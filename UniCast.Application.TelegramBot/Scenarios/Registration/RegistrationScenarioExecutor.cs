@@ -14,6 +14,8 @@ public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrati
     private readonly IDataContext _dataContext;
     private readonly IServiceProvider _serviceProvider;
 
+    public Scenario Scenario => Scenario.Registration;
+
     public RegistrationScenarioExecutor(
         IDataContext dataContext,
         IServiceProvider serviceProvider)
@@ -21,8 +23,6 @@ public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrati
         _dataContext = dataContext;
         _serviceProvider = serviceProvider;
     }
-
-    public Scenario Scenario => Scenario.Registration;
 
     public async Task ChangeStateAsync(
         TelegramChat chat,
@@ -92,9 +92,15 @@ public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrati
         await _dataContext.SaveChangesAsync(ct);
     }
 
-    public Task StartScenarioAsync(TelegramChat chat, Update update, CancellationToken ct = default)
-        => GetState((int)RegistrationScenarioState.Started)
+    public async Task StartScenarioAsync(TelegramChat chat, Update update, CancellationToken ct = default)
+    {
+        chat.CurrentScenario = Scenario.Registration;
+        chat.CurrentState = (int)RegistrationScenarioState.Started;
+
+        await _dataContext.SaveChangesAsync(ct);
+        await GetState((int)RegistrationScenarioState.Started)
             .OnStateChangedAsync(chat, update, ct);
+    }
 
     IState IScenarioExecutor.GetState(int state)
         => GetState(state);
