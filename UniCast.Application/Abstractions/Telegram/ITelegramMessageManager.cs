@@ -8,13 +8,13 @@ public interface ITelegramMessageManager
     Task SendMessageAsync(
         long chatId,
         string text,
-        InlineKeyboardMarkup? inlineKeyboard = null,
+        ReplyMarkup? replyMarkup = null,
         CancellationToken ct = default);
 
     Task<TelegramMessage> SendMessageAsync(
         TelegramChat chat,
         string text,
-        InlineKeyboardMarkup? inlineKeyboard = null,
+        ReplyMarkup? replyMarkup = null,
         CancellationToken ct = default);
 
     Task EditMessageAsync(
