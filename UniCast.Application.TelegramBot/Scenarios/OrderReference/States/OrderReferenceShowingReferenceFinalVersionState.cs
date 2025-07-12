@@ -1,0 +1,95 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
+using UniCast.Application.Abstractions.Persistence;
+using UniCast.Application.Abstractions.Telegram;
+using UniCast.Application.TelegramBot.Messages.Scenarios;
+using UniCast.Domain.Telegram.Entities;
+
+namespace UniCast.Application.TelegramBot.Scenarios.OrderReference.States;
+
+public sealed class OrderReferenceShowingReferenceFinalVersionState : IOrderReferenceState
+{
+    private const string Yes = "Да";
+    private const string No = "Нет";
+
+    private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
+    private readonly ITelegramMessageManager _telegramMessageManager;
+    private readonly IDataContext _dataContext;
+
+    public OrderReferenceShowingReferenceFinalVersionState(
+        OrderReferenceScenarioExecutor scenarioExecutor,
+        IServiceProvider serviceProvider)
+    {
+        _scenarioExecutor = scenarioExecutor;
+        _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
+        _dataContext = serviceProvider.GetRequiredService<IDataContext>();
+    }
+
+    public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
+    {
+        var student = await _dataContext.Students.FirstAsync(x => x.Id == chat.StudentId, ct);
+        string studentFullName =
+            $"{student.FullName.ToString()} {chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.Patronymic]}";
+
+        string finalOrderVersionMessage = string.Format(OrderReferenceScenarioMessages.FinalOrderVersionMessageTemplate,
+            studentFullName,
+            chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.GroupName],
+            chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.ReferencesCount],
+            chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.OrderPurpose],
+            chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.ObtainingMethod]
+        );
+
+        await _telegramMessageManager.SendMessageAsync(
+            chatId: chat.ExtId,
+            text: finalOrderVersionMessage,
+            replyMarkup: new ReplyKeyboardMarkup(
+                (IEnumerable<KeyboardButton>) [new KeyboardButton(Yes), new KeyboardButton(No)]
+            ),
+            ct: ct
+        );
+    }
+
+    public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
+    {
+        if (update is not { Type: UpdateType.Message, Message: not null, Message.Text: not null })
+        {
+            await _telegramMessageManager.SendMessageAsync(
+                chatId: chat.ExtId,
+                text: OrderReferenceScenarioMessages.InvalidMessageFormat,
+                ct: ct);
+            return;
+        }
+
+        switch (update.Message.Text)
+        {
+            case Yes:
+                await _scenarioExecutor.ChangeStateAsync(
+                    chat: chat,
+                    newState: _scenarioExecutor.GetState((int)OrderReferenceState.Completed),
+                    update: update,
+                    ct: ct);
+                break;
+            case No:
+                await _telegramMessageManager.SendMessageAsync(
+                    chatId: chat.ExtId,
+                    text: OrderReferenceScenarioMessages.OkLetsStartAgain,
+                    replyMarkup: new ReplyKeyboardRemove(),
+                    ct: ct);
+                await _scenarioExecutor.ChangeStateAsync(
+                    chat: chat,
+                    newState: _scenarioExecutor.GetState((int)OrderReferenceState.Started),
+                    update: update,
+                    ct: ct);
+                break;
+            default:
+                await _telegramMessageManager.SendMessageAsync(
+                    chatId: chat.ExtId,
+                    text: OrderReferenceScenarioMessages.InvalidIsFinalVersionRightAnswer,
+                    ct: ct);
+                break;
+        }
+    }
+}

@@ -26,4 +26,19 @@ public static class OrderReferenceScenarioMessages
     public const string SelfPickupObtainingMethod = "Заберу лично";
     public const string SendMeAnEmailObtainingMethod = "Пришлите по эл. почте";
     public const string InvalidObtainingMethod = "Выбери нормально бля";
+
+    public const string FinalOrderVersionMessageTemplate = """
+                                                            Давайте проверим, всё ли верно:
+
+                                                            Ваше ФИО - {0}
+                                                            Ваша группа - {1}
+                                                            Количество справок - {2}
+                                                            Цель заказа - {3}
+                                                            Способ получения - {4}
+
+                                                            Верно?
+                                                            """;
+
+    public const string InvalidIsFinalVersionRightAnswer = "Сука ну выбери нормально блять";
+    public const string OkLetsStartAgain = "Хорошо, го по-новой";
 }
