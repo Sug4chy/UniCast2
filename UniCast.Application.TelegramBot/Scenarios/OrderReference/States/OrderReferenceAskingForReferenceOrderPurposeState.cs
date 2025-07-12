@@ -38,7 +38,7 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
     public Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
         => _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
-            text: OrderReferenceScenarioMessages.EnterReferenceOrderPurpose,
+            text: OrderReferenceScenarioMessages.ChooseReferenceOrderPurpose,
             replyMarkup: PurposesKeyboard,
             ct: ct);
 

@@ -9,13 +9,23 @@ using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.OrderReference.States;
 
-public sealed class OrderReferenceOtherOrderPurposeSelectedState : IOrderReferenceState
+public sealed class OrderReferenceAskingForReferenceObtainingMethodState : IOrderReferenceState
 {
+    private static readonly IEnumerable<string> KeyboardButtonsTexts =
+    [
+        OrderReferenceScenarioMessages.SelfPickupObtainingMethod,
+        OrderReferenceScenarioMessages.SendMeAnEmailObtainingMethod
+    ];
+
+    private static readonly ReplyKeyboardMarkup ObtainingMethodsKeyboard = new(
+        KeyboardButtonsTexts.Select(x => new KeyboardButton(x))
+    );
+
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly IDataContext _dataContext;
 
-    public OrderReferenceOtherOrderPurposeSelectedState(
+    public OrderReferenceAskingForReferenceObtainingMethodState(
         OrderReferenceScenarioExecutor scenarioExecutor,
         IServiceProvider serviceProvider)
     {
@@ -27,8 +37,8 @@ public sealed class OrderReferenceOtherOrderPurposeSelectedState : IOrderReferen
     public Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
         => _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
-            text: OrderReferenceScenarioMessages.EnterYourOrderPurpose,
-            replyMarkup: new ReplyKeyboardRemove(),
+            text: OrderReferenceScenarioMessages.ChooseReferenceObtainingMethod,
+            replyMarkup: ObtainingMethodsKeyboard,
             ct: ct);
 
     public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
@@ -42,12 +52,21 @@ public sealed class OrderReferenceOtherOrderPurposeSelectedState : IOrderReferen
             return;
         }
 
-        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.OrderPurpose] = update.Message.Text;
+        if (!KeyboardButtonsTexts.Contains(update.Message.Text))
+        {
+            await _telegramMessageManager.SendMessageAsync(
+                chatId: chat.ExtId,
+                text: OrderReferenceScenarioMessages.InvalidObtainingMethod,
+                ct: ct);
+            return;
+        }
+
+        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.ObtainingMethod] = update.Message.Text;
         await _dataContext.SaveChangesAsync(ct);
 
         await _scenarioExecutor.ChangeStateAsync(
             chat: chat,
-            newState: _scenarioExecutor.GetState((int)OrderReferenceState.AskingForReferenceObtainingMethod),
+            newState: _scenarioExecutor.GetState((int)OrderReferenceState.ShowingReferenceFinalVersion),
             update: update,
             ct: ct);
     }
