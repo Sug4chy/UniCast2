@@ -18,4 +18,6 @@ public static class OrderReferenceScenarioMessages
     public const string ParentsFaxDeductionReferenceOrderPurpose = "Налоговый вычет родителям";
     public const string OtherReferenceOrderPurpose = "Другое";
     public const string InvalidPurpose = "Сам понюхал, чё пукнул?";
+
+    public const string EnterYourOrderPurpose = "Ну и нахуя?";
 }

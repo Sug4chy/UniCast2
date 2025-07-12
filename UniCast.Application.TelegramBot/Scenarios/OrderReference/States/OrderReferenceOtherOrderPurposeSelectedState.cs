@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Messages.Scenarios;
@@ -9,24 +8,13 @@ using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.OrderReference.States;
 
-public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderReferenceState
+public sealed class OrderReferenceOtherOrderPurposeSelectedState : IOrderReferenceState
 {
-    private static readonly IEnumerable<string> KeyboardButtonsTexts =
-    [
-        OrderReferenceScenarioMessages.TransportCardReferenceOrderPurpose,
-        OrderReferenceScenarioMessages.ParentsFaxDeductionReferenceOrderPurpose,
-        OrderReferenceScenarioMessages.OtherReferenceOrderPurpose
-    ];
-
-    private static readonly ReplyKeyboardMarkup PurposesKeyboard = new(
-        KeyboardButtonsTexts.Select(x => new KeyboardButton(x))
-    );
-
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly IDataContext _dataContext;
 
-    public OrderReferenceAskingForReferenceOrderPurposeState(
+    public OrderReferenceOtherOrderPurposeSelectedState(
         OrderReferenceScenarioExecutor scenarioExecutor,
         IServiceProvider serviceProvider)
     {
@@ -38,8 +26,7 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
     public Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
         => _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
-            text: OrderReferenceScenarioMessages.EnterReferenceOrderPurpose,
-            replyMarkup: PurposesKeyboard,
+            text: OrderReferenceScenarioMessages.EnterYourOrderPurpose,
             ct: ct);
 
     public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
@@ -49,25 +36,6 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
             await _telegramMessageManager.SendMessageAsync(
                 chatId: chat.ExtId,
                 text: OrderReferenceScenarioMessages.InvalidMessageFormat,
-                ct: ct);
-            return;
-        }
-
-        if (!KeyboardButtonsTexts.Contains(update.Message.Text))
-        {
-            await _telegramMessageManager.SendMessageAsync(
-                chatId: chat.ExtId,
-                text: OrderReferenceScenarioMessages.InvalidPurpose,
-                ct: ct);
-            return;
-        }
-
-        if (update.Message.Text == OrderReferenceScenarioMessages.OtherReferenceOrderPurpose)
-        {
-            await _scenarioExecutor.ChangeStateAsync(
-                chat: chat,
-                newState: _scenarioExecutor.GetState((int)OrderReferenceState.OtherOrderPurposeSelected),
-                update: update,
                 ct: ct);
             return;
         }
