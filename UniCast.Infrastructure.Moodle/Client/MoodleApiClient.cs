@@ -3,7 +3,6 @@ using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Options;
 using UniCast.Application.Abstractions.Moodle;
 using UniCast.Application.Result;
-using UniCast.Domain.Students.Entities;
 using UniCast.Infrastructure.Moodle.Configuration;
 using UniCast.Infrastructure.Moodle.Errors;
 
@@ -78,9 +77,12 @@ public sealed class MoodleApiClient : IMoodleClient
         }
     }
 
-    public Task<UnitResult<Error>> OrderReferenceForStudentAsync(Student student, CancellationToken ct = default)
+    public Task<UnitResult<Error>> SendMessageToIssuingMethodistAsync(
+        string senderToken,
+        string text,
+        CancellationToken ct = default)
         => SendMessageAsync(
-            senderToken: student.MoodleAccount!.CurrentToken!,
+            senderToken: senderToken,
             receiverExtId: _configuration.IssuingMethodologistExtId,
             text: "Здравствуйте, хочу заказать справку о том, что являюсь студентом",
             ct: ct

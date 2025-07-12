@@ -41,4 +41,14 @@ public static class OrderReferenceScenarioMessages
 
     public const string InvalidIsFinalVersionRightAnswer = "Сука ну выбери нормально блять";
     public const string OkLetsStartAgain = "Хорошо, го по-новой";
+
+    public const string MessageToMethodistTemplate = """
+                                                     Здравствуйте, хочу заказать справку.
+                                                     
+                                                     ФИО - {0}
+                                                     Группа - {1}
+                                                     Количество справок - {2}
+                                                     Цель заказа - {3}
+                                                     Способ получения - {4}
+                                                     """;
 }
