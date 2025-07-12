@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Messages.Scenarios;
 using UniCast.Domain.Telegram.Entities;
@@ -15,12 +17,14 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
         OrderReferenceScenarioMessages.ParentsFaxDeductionReferenceOrderPurpose,
         OrderReferenceScenarioMessages.OtherReferenceOrderPurpose
     ];
+
     private static readonly ReplyKeyboardMarkup PurposesKeyboard = new(
         KeyboardButtonsTexts.Select(x => new KeyboardButton(x))
     );
 
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
+    private readonly IDataContext _dataContext;
 
     public OrderReferenceAskingForReferenceOrderPurposeState(
         OrderReferenceScenarioExecutor scenarioExecutor,
@@ -28,6 +32,7 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
     {
         _scenarioExecutor = scenarioExecutor;
         _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
+        _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
 
     public Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
@@ -37,8 +42,43 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
             replyMarkup: PurposesKeyboard,
             ct: ct);
 
-    public Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
+    public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        if (update is not { Type: UpdateType.Message, Message: not null, Message.Text: not null })
+        {
+            await _telegramMessageManager.SendMessageAsync(
+                chatId: chat.ExtId,
+                text: OrderReferenceScenarioMessages.InvalidMessageFormat,
+                ct: ct);
+            return;
+        }
+
+        if (!KeyboardButtonsTexts.Contains(update.Message.Text))
+        {
+            await _telegramMessageManager.SendMessageAsync(
+                chatId: chat.ExtId,
+                text: OrderReferenceScenarioMessages.InvalidPurpose,
+                ct: ct);
+            return;
+        }
+
+        if (update.Message.Text == OrderReferenceScenarioMessages.OtherReferenceOrderPurpose)
+        {
+            await _scenarioExecutor.ChangeStateAsync(
+                chat: chat,
+                newState: _scenarioExecutor.GetState((int)OrderReferenceState.OtherPurposeSelected),
+                update: update,
+                ct: ct);
+            return;
+        }
+
+        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.OrderPurpose] = update.Message.Text;
+        await _dataContext.SaveChangesAsync(ct);
+
+        await _scenarioExecutor.ChangeStateAsync(
+            chat: chat,
+            newState: _scenarioExecutor.GetState((int)OrderReferenceState.AskingForReferenceObtainingMethod),
+            update: update,
+            ct: ct);
     }
 }

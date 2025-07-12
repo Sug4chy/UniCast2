@@ -17,4 +17,5 @@ public static class OrderReferenceScenarioMessages
     public const string TransportCardReferenceOrderPurpose = "Получение транспортной карты";
     public const string ParentsFaxDeductionReferenceOrderPurpose = "Налоговый вычет родителям";
     public const string OtherReferenceOrderPurpose = "Другое";
+    public const string InvalidPurpose = "Сам понюхал, чё пукнул?";
 }

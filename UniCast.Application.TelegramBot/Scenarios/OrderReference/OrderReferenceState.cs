@@ -7,7 +7,8 @@ public enum OrderReferenceState
     AskingForGroup = 2,
     AskingForReferencesCount = 3,
     AskingForReferenceOrderPurpose = 4,
-    AskingForReferenceObtainingMethod = 5,
-    ShowingReferenceFinalVersion = 6,
-    Completed = 7
+    OtherPurposeSelected = 5,
+    AskingForReferenceObtainingMethod = 6,
+    ShowingReferenceFinalVersion = 7,
+    Completed = 8
 }
