@@ -25,7 +25,7 @@ public sealed class FaqCommandCalledUpdateHandler : IUpdateHandler
         => _telegramMessageManager.SendMessageAsync(
             chatId: update.Message!.Chat.Id,
             text: FaqCommandMessages.NewResponse,
-            inlineKeyboard: new InlineKeyboardMarkup(
+            replyMarkup: new InlineKeyboardMarkup(
                 InlineKeyboardButton.WithUrl("Не нашли ответ на интересующий вопрос?", "https://iit.csu.ru/")),
             ct: ct);
 }

@@ -61,7 +61,7 @@ public sealed class SendIndividualMessageCommandHandler : ICommandHandler<SendIn
         _dataContext.MessageFromMethodists.Add(messageFromMethodistResult.Value);
         foreach (var student in students)
         {
-            var chat = await GetPrivateChatForStudentAsync(student, ct);
+            var chat = await GetChatForStudentAsync(student, ct);
             if (chat is null)
             {
                 _logger.LogWarning("Chat for student with name {StudentName} wasn't found", student.FullName);
@@ -82,7 +82,7 @@ public sealed class SendIndividualMessageCommandHandler : ICommandHandler<SendIn
         => _dataContext.Students
             .SingleOrDefaultAsync(x => x.MoodleAccount!.ExtId == extId, ct);
 
-    private Task<TelegramChat?> GetPrivateChatForStudentAsync(Student student, CancellationToken ct = default)
+    private Task<TelegramChat?> GetChatForStudentAsync(Student student, CancellationToken ct = default)
         => _dataContext.TelegramChats
             .SingleOrDefaultAsync(x => x.Student == student, ct);
 }

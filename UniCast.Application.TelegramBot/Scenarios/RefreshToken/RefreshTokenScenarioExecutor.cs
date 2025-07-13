@@ -11,13 +11,13 @@ public sealed class RefreshTokenScenarioExecutor : IScenarioExecutor<IRefreshTok
     private readonly IDataContext _dataContext;
     private readonly IServiceProvider _serviceProvider;
 
+    public Scenario Scenario => Scenario.RefreshToken;
+
     public RefreshTokenScenarioExecutor(IDataContext dataContext, IServiceProvider serviceProvider)
     {
         _dataContext = dataContext;
         _serviceProvider = serviceProvider;
     }
-
-    public Scenario Scenario => Scenario.RefreshToken;
 
     public async Task StartScenarioAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
@@ -66,5 +66,5 @@ public sealed class RefreshTokenScenarioExecutor : IScenarioExecutor<IRefreshTok
         => GetState(state);
 
     public ValueTask<bool> CanStartScenarioAsync(Update update, CancellationToken ct = default)
-        => throw new NotSupportedException();
+        => ValueTask.FromResult(false);
 }

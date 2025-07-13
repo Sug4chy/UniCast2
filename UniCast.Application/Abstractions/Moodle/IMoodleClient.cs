@@ -1,6 +1,5 @@
 using CSharpFunctionalExtensions;
 using UniCast.Application.Result;
-using UniCast.Domain.Students.Entities;
 
 namespace UniCast.Application.Abstractions.Moodle;
 
@@ -17,7 +16,8 @@ public interface IMoodleClient
         string text,
         CancellationToken ct = default);
 
-    Task<UnitResult<Error>> OrderReferenceForStudentAsync(
-        Student student,
+    Task<UnitResult<Error>> SendMessageToIssuingMethodistAsync(
+        string senderToken,
+        string text,
         CancellationToken ct = default);
 }

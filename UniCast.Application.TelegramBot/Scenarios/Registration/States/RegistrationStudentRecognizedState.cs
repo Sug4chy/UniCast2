@@ -28,7 +28,7 @@ public sealed class RegistrationStudentRecognizedState : IRegistrationState
             chatId: chat.ExtId,
             text: string.Format(RegistrationScenarioMessages.ProbablyRecognizeUser,
                 chat.CurrentScenarioArgs[RegistrationScenarioArgsKeys.StudentFullName]),
-            inlineKeyboard: new InlineKeyboardMarkup((IEnumerable<InlineKeyboardButton>)
+            replyMarkup: new InlineKeyboardMarkup((IEnumerable<InlineKeyboardButton>)
             [
                 new InlineKeyboardButton(Yes, Yes),
                 new InlineKeyboardButton(No, No)
