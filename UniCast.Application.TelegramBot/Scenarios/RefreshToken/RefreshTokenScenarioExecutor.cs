@@ -66,5 +66,5 @@ public sealed class RefreshTokenScenarioExecutor : IScenarioExecutor<IRefreshTok
         => GetState(state);
 
     public ValueTask<bool> CanStartScenarioAsync(Update update, CancellationToken ct = default)
-        => throw new NotSupportedException();
+        => ValueTask.FromResult(false);
 }

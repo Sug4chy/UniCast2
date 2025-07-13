@@ -20,7 +20,10 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
 
     private static readonly ReplyKeyboardMarkup PurposesKeyboard = new(
         KeyboardButtonsTexts.Select(x => new KeyboardButton(x))
-    );
+    )
+    {
+        ResizeKeyboard = true
+    };
 
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;

@@ -15,6 +15,13 @@ public sealed class OrderReferenceShowingReferenceFinalVersionState : IOrderRefe
     private const string Yes = "Да";
     private const string No = "Нет";
 
+    private static readonly ReplyKeyboardMarkup YesOrNoKeyboard = new(
+        (IEnumerable<KeyboardButton>) [new KeyboardButton(Yes), new KeyboardButton(No)]
+    )
+    {
+        ResizeKeyboard = true
+    };
+
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly IDataContext _dataContext;
@@ -45,9 +52,7 @@ public sealed class OrderReferenceShowingReferenceFinalVersionState : IOrderRefe
         await _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
             text: finalOrderVersionMessage,
-            replyMarkup: new ReplyKeyboardMarkup(
-                (IEnumerable<KeyboardButton>) [new KeyboardButton(Yes), new KeyboardButton(No)]
-            ),
+            replyMarkup: YesOrNoKeyboard,
             ct: ct
         );
     }

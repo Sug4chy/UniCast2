@@ -64,7 +64,7 @@ public sealed class OrderReferenceCompletedState : IOrderReferenceState
                 await _telegramMessageManager.SendMessageAsync(
                     chatId: update.Message!.Chat.Id,
                     text: "Кажется, что-то пошло не так. Пожалуйста, повторите попытку позже",
-                    ct: ct);
+                    ct: ct.IsCancellationRequested ? CancellationToken.None : ct);
             }
 
             return;
@@ -79,5 +79,6 @@ public sealed class OrderReferenceCompletedState : IOrderReferenceState
     }
 
     public Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
-        => Task.CompletedTask;
+        => _scenarioExecutor.GetState((int)OrderReferenceState.ShowingReferenceFinalVersion)
+            .HandleUserInputAsync(chat, update, ct);
 }

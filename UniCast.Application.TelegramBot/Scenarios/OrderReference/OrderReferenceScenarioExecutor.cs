@@ -34,8 +34,20 @@ public sealed class OrderReferenceScenarioExecutor : IScenarioExecutor<IOrderRef
         => state switch
         {
             (int)OrderReferenceState.Started => new OrderReferenceStartedState(this, _serviceProvider),
-            (int)OrderReferenceState.AskingForPatronymic => 
+            (int)OrderReferenceState.AskingForPatronymic =>
                 new OrderReferenceAskingForPatronymicState(this, _serviceProvider),
+            (int)OrderReferenceState.AskingForGroup => new OrderReferenceAskingForGroupState(this, _serviceProvider),
+            (int)OrderReferenceState.AskingForReferencesCount =>
+                new OrderReferenceAskingForReferencesCountState(this, _serviceProvider),
+            (int)OrderReferenceState.AskingForReferenceOrderPurpose =>
+                new OrderReferenceAskingForReferenceOrderPurposeState(this, _serviceProvider),
+            (int)OrderReferenceState.OtherOrderPurposeSelected =>
+                new OrderReferenceOtherOrderPurposeSelectedState(this, _serviceProvider),
+            (int)OrderReferenceState.AskingForReferenceObtainingMethod =>
+                new OrderReferenceAskingForReferenceObtainingMethodState(this, _serviceProvider),
+            (int)OrderReferenceState.ShowingReferenceFinalVersion =>
+                new OrderReferenceShowingReferenceFinalVersionState(this, _serviceProvider),
+            (int)OrderReferenceState.Completed => new OrderReferenceCompletedState(this, _serviceProvider),
             _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)
         };
 
@@ -64,6 +76,14 @@ public sealed class OrderReferenceScenarioExecutor : IScenarioExecutor<IOrderRef
         {
             OrderReferenceStartedState => OrderReferenceState.Started,
             OrderReferenceAskingForPatronymicState => OrderReferenceState.AskingForPatronymic,
+            OrderReferenceAskingForGroupState => OrderReferenceState.AskingForGroup,
+            OrderReferenceAskingForReferencesCountState => OrderReferenceState.AskingForReferencesCount,
+            OrderReferenceAskingForReferenceOrderPurposeState => OrderReferenceState.AskingForReferenceOrderPurpose,
+            OrderReferenceOtherOrderPurposeSelectedState => OrderReferenceState.OtherOrderPurposeSelected,
+            OrderReferenceAskingForReferenceObtainingMethodState => OrderReferenceState
+                .AskingForReferenceObtainingMethod,
+            OrderReferenceShowingReferenceFinalVersionState => OrderReferenceState.ShowingReferenceFinalVersion,
+            OrderReferenceCompletedState => OrderReferenceState.Completed,
             _ => throw new ArgumentOutOfRangeException(nameof(state))
         });
 
