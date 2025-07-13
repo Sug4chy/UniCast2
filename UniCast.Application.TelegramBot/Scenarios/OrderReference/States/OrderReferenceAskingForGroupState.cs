@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -8,9 +9,10 @@ using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.OrderReference.States;
 
-public sealed class OrderReferenceAskingForGroupState : IOrderReferenceState
+public sealed partial class OrderReferenceAskingForGroupState : IOrderReferenceState
 {
-    // TODO add group name validation
+    [GeneratedRegex("^(ПрИ|ПИ|БИ)-[1-4]0[1-9]")]
+    private static partial Regex GroupNameRegex();
 
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
@@ -38,6 +40,15 @@ public sealed class OrderReferenceAskingForGroupState : IOrderReferenceState
             await _telegramMessageManager.SendMessageAsync(
                 chatId: chat.ExtId,
                 text: OrderReferenceScenarioMessages.InvalidMessageFormat,
+                ct: ct);
+            return;
+        }
+
+        if (!GroupNameRegex().IsMatch(update.Message.Text))
+        {
+            await _telegramMessageManager.SendMessageAsync(
+                chatId: chat.ExtId,
+                text: OrderReferenceScenarioMessages.InvalidGroupName,
                 ct: ct);
             return;
         }
