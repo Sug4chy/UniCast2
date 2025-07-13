@@ -15,9 +15,6 @@ public static class OrderReferenceScenarioMessages
     public const string InvalidNumberFormat = "Чё с числом нах";
 
     public const string ChooseReferenceOrderPurpose = "Нахуя справка?";
-    public const string TransportCardReferenceOrderPurpose = "Получение транспортной карты";
-    public const string ParentsFaxDeductionReferenceOrderPurpose = "Налоговый вычет родителям";
-    public const string OtherReferenceOrderPurpose = "Другое";
     public const string InvalidPurpose = "Сам понюхал, чё пукнул?";
 
     public const string EnterYourOrderPurpose = "Ну и нахуя?";

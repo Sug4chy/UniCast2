@@ -11,15 +11,31 @@ namespace UniCast.Application.TelegramBot.Scenarios.OrderReference.States;
 
 public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderReferenceState
 {
-    private static readonly IEnumerable<string> KeyboardButtonsTexts =
+    private const string TransportCardPurpose = "Транспортная карта";
+    private const string FaxDeductionPurpose = "Для работодателя";
+    private const string SocialProtectionPurpose = "Соц. защита";
+    private const string PensionFundPurpose = "Пенсионный фонд";
+    private const string VisaExtensionPurpose = "Продление визы";
+    private const string TaxPurpose = "Для налоговой";
+    private const string OtherPurpose = "Другое";
+
+    private static readonly string[] KeyboardButtonsTexts =
     [
-        OrderReferenceScenarioMessages.TransportCardReferenceOrderPurpose,
-        OrderReferenceScenarioMessages.ParentsFaxDeductionReferenceOrderPurpose,
-        OrderReferenceScenarioMessages.OtherReferenceOrderPurpose
+        TransportCardPurpose,
+        FaxDeductionPurpose,
+        SocialProtectionPurpose,
+        PensionFundPurpose,
+        VisaExtensionPurpose,
+        TaxPurpose,
+        OtherPurpose
     ];
 
     private static readonly ReplyKeyboardMarkup PurposesKeyboard = new(
-        KeyboardButtonsTexts.Select(x => new KeyboardButton(x))
+        [
+            [Button(SocialProtectionPurpose), Button(VisaExtensionPurpose)],
+            [Button(TaxPurpose), Button(TransportCardPurpose), Button(FaxDeductionPurpose)],
+            [Button(PensionFundPurpose), Button(OtherPurpose)]
+        ]
     )
     {
         ResizeKeyboard = true
@@ -37,6 +53,8 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
         _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
+
+    private static KeyboardButton Button(string text) => new(text);
 
     public Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
         => _telegramMessageManager.SendMessageAsync(
@@ -65,7 +83,7 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
             return;
         }
 
-        if (update.Message.Text == OrderReferenceScenarioMessages.OtherReferenceOrderPurpose)
+        if (update.Message.Text == OtherPurpose)
         {
             await _scenarioExecutor.ChangeStateAsync(
                 chat: chat,
