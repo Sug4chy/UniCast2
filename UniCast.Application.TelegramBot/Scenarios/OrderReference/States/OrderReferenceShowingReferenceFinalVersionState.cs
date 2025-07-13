@@ -35,6 +35,31 @@ public sealed class OrderReferenceShowingReferenceFinalVersionState : IOrderRefe
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
 
+    private Task HandleYesAsync(TelegramChat chat, Update update, CancellationToken ct = default)
+        => _scenarioExecutor.ChangeStateAsync(
+            chat: chat,
+            newState: _scenarioExecutor.GetState((int)OrderReferenceState.Completed),
+            update: update,
+            ct: ct);
+
+    private async Task HandleNoAsync(TelegramChat chat, Update update, CancellationToken ct = default)
+    {
+        await _telegramMessageManager.SendMessageAsync(
+            chatId: chat.ExtId,
+            text: OrderReferenceScenarioMessages.OkLetsStartAgain,
+            replyMarkup: new ReplyKeyboardRemove(),
+            ct: ct);
+
+        chat.CurrentScenarioArgs.Clear();
+        await _dataContext.SaveChangesAsync(ct);
+
+        await _scenarioExecutor.ChangeStateAsync(
+            chat: chat,
+            newState: _scenarioExecutor.GetState((int)OrderReferenceState.Started),
+            update: update,
+            ct: ct);
+    }
+
     public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         var student = await _dataContext.Students.FirstAsync(x => x.Id == chat.StudentId, ct);
@@ -71,23 +96,10 @@ public sealed class OrderReferenceShowingReferenceFinalVersionState : IOrderRefe
         switch (update.Message.Text)
         {
             case Yes:
-                await _scenarioExecutor.ChangeStateAsync(
-                    chat: chat,
-                    newState: _scenarioExecutor.GetState((int)OrderReferenceState.Completed),
-                    update: update,
-                    ct: ct);
+                await HandleYesAsync(chat, update, ct);
                 break;
             case No:
-                await _telegramMessageManager.SendMessageAsync(
-                    chatId: chat.ExtId,
-                    text: OrderReferenceScenarioMessages.OkLetsStartAgain,
-                    replyMarkup: new ReplyKeyboardRemove(),
-                    ct: ct);
-                await _scenarioExecutor.ChangeStateAsync(
-                    chat: chat,
-                    newState: _scenarioExecutor.GetState((int)OrderReferenceState.Started),
-                    update: update,
-                    ct: ct);
+                await HandleNoAsync(chat, update, ct);
                 break;
             default:
                 await _telegramMessageManager.SendMessageAsync(
