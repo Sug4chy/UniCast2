@@ -24,6 +24,9 @@ public static class OrderReferenceScenarioMessages
     public const string SendMeAnEmailObtainingMethod = "Пришлите по эл. почте";
     public const string InvalidObtainingMethod = "Выбери нормально бля";
 
+    public const string EnterYourEmail = "Введи почту бля";
+    public const string InvalidEmailFormat = "Нормально почту введи бля";
+
     public const string FinalOrderVersionMessageTemplate = """
                                                             Давайте проверим, всё ли верно:
 

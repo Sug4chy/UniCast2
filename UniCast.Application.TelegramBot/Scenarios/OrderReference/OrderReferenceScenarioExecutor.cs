@@ -45,6 +45,7 @@ public sealed class OrderReferenceScenarioExecutor : IScenarioExecutor<IOrderRef
                 new OrderReferenceOtherOrderPurposeSelectedState(this, _serviceProvider),
             (int)OrderReferenceState.AskingForReferenceObtainingMethod =>
                 new OrderReferenceAskingForReferenceObtainingMethodState(this, _serviceProvider),
+            (int)OrderReferenceState.AskingForEmail => new OrderReferenceAskingForEmailState(this, _serviceProvider),
             (int)OrderReferenceState.ShowingReferenceFinalVersion =>
                 new OrderReferenceShowingReferenceFinalVersionState(this, _serviceProvider),
             (int)OrderReferenceState.Completed => new OrderReferenceCompletedState(this, _serviceProvider),
@@ -80,8 +81,9 @@ public sealed class OrderReferenceScenarioExecutor : IScenarioExecutor<IOrderRef
             OrderReferenceAskingForReferencesCountState => OrderReferenceState.AskingForReferencesCount,
             OrderReferenceAskingForReferenceOrderPurposeState => OrderReferenceState.AskingForReferenceOrderPurpose,
             OrderReferenceOtherOrderPurposeSelectedState => OrderReferenceState.OtherOrderPurposeSelected,
-            OrderReferenceAskingForReferenceObtainingMethodState => OrderReferenceState
-                .AskingForReferenceObtainingMethod,
+            OrderReferenceAskingForReferenceObtainingMethodState => 
+                OrderReferenceState.AskingForReferenceObtainingMethod,
+            OrderReferenceAskingForEmailState => OrderReferenceState.AskingForEmail,
             OrderReferenceShowingReferenceFinalVersionState => OrderReferenceState.ShowingReferenceFinalVersion,
             OrderReferenceCompletedState => OrderReferenceState.Completed,
             _ => throw new ArgumentOutOfRangeException(nameof(state))

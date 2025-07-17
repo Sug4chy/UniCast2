@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -9,26 +10,13 @@ using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.OrderReference.States;
 
-public sealed class OrderReferenceAskingForReferenceObtainingMethodState : IOrderReferenceState
+public sealed partial class OrderReferenceAskingForEmailState : IOrderReferenceState
 {
-    private static readonly IEnumerable<string> KeyboardButtonsTexts =
-    [
-        OrderReferenceScenarioMessages.SelfPickupObtainingMethod,
-        OrderReferenceScenarioMessages.SendMeAnEmailObtainingMethod
-    ];
-
-    private static readonly ReplyKeyboardMarkup ObtainingMethodsKeyboard = new(
-        KeyboardButtonsTexts.Select(x => new KeyboardButton(x))
-    )
-    {
-        ResizeKeyboard = true
-    };
-
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly IDataContext _dataContext;
 
-    public OrderReferenceAskingForReferenceObtainingMethodState(
+    public OrderReferenceAskingForEmailState(
         OrderReferenceScenarioExecutor scenarioExecutor,
         IServiceProvider serviceProvider)
     {
@@ -37,11 +25,14 @@ public sealed class OrderReferenceAskingForReferenceObtainingMethodState : IOrde
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
 
+    [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")]
+    private partial Regex EmailRegex();
+
     public Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
         => _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
-            text: OrderReferenceScenarioMessages.ChooseReferenceObtainingMethod,
-            replyMarkup: ObtainingMethodsKeyboard,
+            text: OrderReferenceScenarioMessages.EnterYourEmail,
+            replyMarkup: new ReplyKeyboardRemove(),
             ct: ct);
 
     public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
@@ -55,31 +46,21 @@ public sealed class OrderReferenceAskingForReferenceObtainingMethodState : IOrde
             return;
         }
 
-        if (!KeyboardButtonsTexts.Contains(update.Message.Text))
+        if (!EmailRegex().IsMatch(update.Message.Text))
         {
             await _telegramMessageManager.SendMessageAsync(
                 chatId: chat.ExtId,
-                text: OrderReferenceScenarioMessages.InvalidObtainingMethod,
+                text: OrderReferenceScenarioMessages.InvalidEmailFormat,
                 ct: ct);
             return;
         }
 
-        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.ObtainingMethod] = update.Message.Text;
+        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.Email] = update.Message.Text;
         await _dataContext.SaveChangesAsync(ct);
-
-        if (update.Message.Text == OrderReferenceScenarioMessages.SelfPickupObtainingMethod)
-        {
-            await _scenarioExecutor.ChangeStateAsync(
-                chat: chat,
-                newState: _scenarioExecutor.GetState((int)OrderReferenceState.ShowingReferenceFinalVersion),
-                update: update,
-                ct: ct);
-            return;
-        }
 
         await _scenarioExecutor.ChangeStateAsync(
             chat: chat,
-            newState: _scenarioExecutor.GetState((int)OrderReferenceState.AskingForEmail),
+            newState: _scenarioExecutor.GetState((int)OrderReferenceState.ShowingReferenceFinalVersion),
             update: update,
             ct: ct);
     }
