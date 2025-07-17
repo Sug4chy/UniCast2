@@ -7,4 +7,5 @@ public static class OrderReferenceScenarioArgsKeys
     public const string ReferencesCount = nameof(ReferencesCount);
     public const string OrderPurpose = nameof(OrderPurpose);
     public const string ObtainingMethod = nameof(ObtainingMethod);
+    public const string Email = nameof(Email);
 }

@@ -60,6 +60,11 @@ public sealed class OrderReferenceShowingReferenceFinalVersionState : IOrderRefe
             ct: ct);
     }
 
+    private static string BuildObtainingMethodString(Dictionary<string, string> scenarioArgs)
+        => scenarioArgs.TryGetValue(OrderReferenceScenarioArgsKeys.Email, out string? value)
+            ? $"Пришлите на почту {value}"
+            : OrderReferenceScenarioMessages.SelfPickupObtainingMethod;
+
     public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         var student = await _dataContext.Students.FirstAsync(x => x.Id == chat.StudentId, ct);
@@ -71,7 +76,7 @@ public sealed class OrderReferenceShowingReferenceFinalVersionState : IOrderRefe
             chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.GroupName],
             chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.ReferencesCount],
             chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.OrderPurpose],
-            chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.ObtainingMethod]
+            BuildObtainingMethodString(chat.CurrentScenarioArgs)
         );
 
         await _telegramMessageManager.SendMessageAsync(

@@ -84,7 +84,6 @@ public sealed class MoodleApiClient : IMoodleClient
         => SendMessageAsync(
             senderToken: senderToken,
             receiverExtId: _configuration.IssuingMethodologistExtId,
-            text: "Здравствуйте, хочу заказать справку о том, что являюсь студентом",
-            ct: ct
-        );
+            text: text,
+            ct: ct);
 }

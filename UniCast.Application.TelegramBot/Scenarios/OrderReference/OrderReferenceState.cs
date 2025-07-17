@@ -9,6 +9,7 @@ public enum OrderReferenceState
     AskingForReferenceOrderPurpose = 4,
     OtherOrderPurposeSelected = 5,
     AskingForReferenceObtainingMethod = 6,
-    ShowingReferenceFinalVersion = 7,
-    Completed = 8
+    AskingForEmail = 7,
+    ShowingReferenceFinalVersion = 8,
+    Completed = 9
 }
