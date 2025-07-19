@@ -30,11 +30,6 @@ public sealed class OrderReferenceCompletedState : IOrderReferenceState
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
 
-    private static string BuildObtainingMethodString(Dictionary<string, string> scenarioArgs)
-        => scenarioArgs.TryGetValue(OrderReferenceScenarioArgsKeys.Email, out string? value)
-            ? $"Пришлите на почту {value}"
-            : OrderReferenceScenarioMessages.SelfPickupObtainingMethod;
-
     public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         var student = await _dataContext.Students
@@ -48,7 +43,7 @@ public sealed class OrderReferenceCompletedState : IOrderReferenceState
             chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.GroupName],
             chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.ReferencesCount],
             chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.OrderPurpose],
-            BuildObtainingMethodString(chat.CurrentScenarioArgs));
+            chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.ObtainingMethod]);
 
         var orderResult = await _moodleClient.SendMessageToIssuingMethodistAsync(
             senderToken: student.MoodleAccount!.CurrentToken!, 
@@ -77,7 +72,7 @@ public sealed class OrderReferenceCompletedState : IOrderReferenceState
 
         await _telegramMessageManager.SendMessageAsync(
             chatId: update.Message!.Chat.Id,
-            text: "Справка была успешно заказана, ваше сообщение отправлено методисту",
+            text: OrderReferenceScenarioMessages.Completed,
             ct: ct);
 
         await _scenarioExecutor.ClearScenarioAsync(chat, ct);
