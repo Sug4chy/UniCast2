@@ -1,5 +1,6 @@
 ﻿services:
 
+  # Step 1: init storages
   seq:
     image: datalust/seq
     restart: unless-stopped
@@ -9,58 +10,6 @@
       - seq-data:/data
     networks:
       - uni-cast-network
-
-  telegram-bot:
-    image: sug4chy/unicast-telegram-bot
-    environment:
-      ASPNETCORE_ENVIRONMENT: Staging
-      TelegramBot__Token: ${TelegramBot__Token}
-      TelegramBot__Username: ${TelegramBot__Username}
-      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
-      Moodle__BaseUrl: ${Moodle__BaseUrl}
-      Moodle__IssuingMethodologistExtId: ${Moodle__IssuingMethodologistExtId}
-      WEBHOOK_CERTIFICATE_PATH: "/certificates/public.pem"
-      WEBHOOK_URL: ${WEBHOOK_URL}
-      Seq__Url: ${Seq__Url}
-    restart: on-failure
-    volumes:
-      - ./certificates.public.pem/:/certificates/public.pem
-    depends_on:
-      nginx:
-        condition: service_started
-      students-fetcher:
-        condition: service_completed_successfully
-    networks:
-      - uni-cast-network
-
-  internal-api:
-    image: sug4chy/unicast-internal-api
-    ports:
-      - "5236:8080"
-    environment:
-      ASPNETCORE_ENVIRONMENT: Staging
-      TelegramBot__Token: ${TelegramBot__Token}
-      TelegramBot__Username: ${TelegramBot__Username}
-      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
-      Seq__Url: ${Seq__Url}
-    restart: on-failure
-    networks:
-      - uni-cast-network
-    depends_on:
-      students-fetcher:
-        condition: service_completed_successfully
-
-  students-fetcher:
-    image: sug4chy/unicast-students-fetcher
-    environment:
-      MOODLE_BASE_URL: ${Moodle__BaseUrl}
-      MOODLE_TOKEN: ${Moodle__WsAuthToken}
-      CONNECTION_STRING: ${ConnectionStrings__DefaultConnection}
-    networks:
-      - uni-cast-network
-    depends_on:
-      migrator:
-        condition: service_completed_successfully
 
   db:
     image: postgres:16
@@ -78,6 +27,7 @@
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+  # Step 2: run migrator
   migrator:
     image: sug4chy/unicast-migrator
     environment:
@@ -89,11 +39,62 @@
       db:
         condition: service_healthy
 
+  # Step 3: run utils
+  students-fetcher:
+    image: sug4chy/unicast-students-fetcher
+    environment:
+      MOODLE_BASE_URL: ${Moodle__BaseUrl}
+      MOODLE_TOKEN: ${Moodle__WsAuthToken}
+      CONNECTION_STRING: ${ConnectionStrings__DefaultConnection}
+    networks:
+      - uni-cast-network
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+
+  # Step 4: run main services
+  telegram-bot:
+    image: sug4chy/unicast-telegram-bot
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+      TelegramBot__Token: ${TelegramBot__Token}
+      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
+      Moodle__BaseUrl: ${Moodle__BaseUrl}
+      Moodle__IssuingMethodologistExtId: ${Moodle__IssuingMethodologistExtId}
+      WEBHOOK_CERTIFICATE_PATH: "/certificates/public.pem"
+      WEBHOOK_URL: ${WEBHOOK_URL}
+      Seq__Url: ${Seq__Url}
+    restart: on-failure
+    volumes:
+      - ./certificates/public.pem:/certificates/public.pem
+    depends_on:
+      students-fetcher:
+        condition: service_completed_successfully
+    networks:
+      - uni-cast-network
+
+  internal-api:
+    image: sug4chy/unicast-internal-api
+    ports:
+      - "5236:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+      TelegramBot__Token: ${TelegramBot__Token}
+      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
+      Seq__Url: ${Seq__Url}
+    restart: on-failure
+    networks:
+      - uni-cast-network
+    depends_on:
+      students-fetcher:
+        condition: service_completed_successfully
+
+  # Step 5: run Nginx
   nginx:
     image: nginx
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./certificates:~/certificates
+      - ./certificates:/certificates
     networks:
       - uni-cast-network
     ports:
