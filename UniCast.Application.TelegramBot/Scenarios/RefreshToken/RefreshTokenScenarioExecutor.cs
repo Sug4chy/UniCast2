@@ -1,13 +1,17 @@
+using System.Text.Json;
 using Telegram.Bot.Types;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.TelegramBot.Scenarios.RefreshToken.States;
 using UniCast.Domain.Telegram.Entities;
 using UniCast.Domain.Telegram.ValueObjects.Enums;
+using ScenarioEnum = UniCast.Domain.Telegram.ValueObjects.Enums.Scenario;
 
 namespace UniCast.Application.TelegramBot.Scenarios.RefreshToken;
 
 public sealed class RefreshTokenScenarioExecutor : IScenarioExecutor<IRefreshTokenState>
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.General);
+
     private readonly IDataContext _dataContext;
     private readonly IServiceProvider _serviceProvider;
 
@@ -21,8 +25,15 @@ public sealed class RefreshTokenScenarioExecutor : IScenarioExecutor<IRefreshTok
 
     public async Task StartScenarioAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
+        Dictionary<string, string> newArgs = [];
+        newArgs[RefreshTokenScenarioArgsKeys.PreviousScenario] = chat.CurrentScenario.ToString()!;
+        newArgs[RefreshTokenScenarioArgsKeys.PreviousState] = chat.CurrentState.ToString()!;
+        newArgs[RefreshTokenScenarioArgsKeys.PreviousScenarioArgs] =
+            JsonSerializer.Serialize(chat.CurrentScenarioArgs, JsonSerializerOptions);
+
         chat.CurrentScenario = Scenario.RefreshToken;
         chat.CurrentState = (int)RefreshTokenScenarioState.Started;
+        chat.CurrentScenarioArgs = newArgs;
 
         await _dataContext.SaveChangesAsync(ct);
         await GetState((int)RefreshTokenScenarioState.Started)
@@ -39,9 +50,13 @@ public sealed class RefreshTokenScenarioExecutor : IScenarioExecutor<IRefreshTok
 
     public async Task ClearScenarioAsync(TelegramChat chat, CancellationToken ct = default)
     {
-        chat.CurrentScenario = null;
-        chat.CurrentState = null;
-        chat.CurrentScenarioArgs = [];
+        Enum.TryParse<ScenarioEnum>(
+            chat.CurrentScenarioArgs[RefreshTokenScenarioArgsKeys.PreviousScenario],
+            out var scenario);
+        chat.CurrentScenario = scenario;
+        chat.CurrentState = int.Parse(chat.CurrentScenarioArgs[RefreshTokenScenarioArgsKeys.PreviousState]);
+        chat.CurrentScenarioArgs = JsonSerializer.Deserialize<Dictionary<string, string>>(
+            chat.CurrentScenarioArgs[RefreshTokenScenarioArgsKeys.PreviousScenarioArgs]) ?? [];
 
         await _dataContext.SaveChangesAsync(ct);
     }
@@ -62,7 +77,7 @@ public sealed class RefreshTokenScenarioExecutor : IScenarioExecutor<IRefreshTok
             _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)
         });
 
-    IState IScenarioExecutor.GetState(int state) 
+    IState IScenarioExecutor.GetState(int state)
         => GetState(state);
 
     public ValueTask<bool> CanStartScenarioAsync(Update update, CancellationToken ct = default)

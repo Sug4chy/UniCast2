@@ -64,23 +64,24 @@ public sealed class OrderReferenceAskingForReferenceObtainingMethodState : IOrde
             return;
         }
 
-        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.ObtainingMethod] = update.Message.Text;
-        await _dataContext.SaveChangesAsync(ct);
-
-        if (update.Message.Text == OrderReferenceScenarioMessages.SelfPickupObtainingMethod)
+        switch (update.Message.Text)
         {
-            await _scenarioExecutor.ChangeStateAsync(
-                chat: chat,
-                newState: _scenarioExecutor.GetState((int)OrderReferenceState.ShowingReferenceFinalVersion),
-                update: update,
-                ct: ct);
-            return;
+            case OrderReferenceScenarioMessages.SelfPickupObtainingMethod:
+                chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.ObtainingMethod] = update.Message.Text;
+                await _dataContext.SaveChangesAsync(ct);
+                await _scenarioExecutor.ChangeStateAsync(
+                    chat: chat,
+                    newState: _scenarioExecutor.GetState((int)OrderReferenceState.ShowingReferenceFinalVersion),
+                    update: update,
+                    ct: ct);
+                break;
+            case OrderReferenceScenarioMessages.SendMeAnEmailObtainingMethod:
+                await _scenarioExecutor.ChangeStateAsync(
+                    chat: chat,
+                    newState: _scenarioExecutor.GetState((int)OrderReferenceState.AskingForEmail),
+                    update: update,
+                    ct: ct);
+                break;
         }
-
-        await _scenarioExecutor.ChangeStateAsync(
-            chat: chat,
-            newState: _scenarioExecutor.GetState((int)OrderReferenceState.AskingForEmail),
-            update: update,
-            ct: ct);
     }
 }

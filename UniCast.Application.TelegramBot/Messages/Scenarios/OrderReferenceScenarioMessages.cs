@@ -1,54 +1,70 @@
 namespace UniCast.Application.TelegramBot.Messages.Scenarios;
 
-// Текста сообщений будут изменены
 public static class OrderReferenceScenarioMessages
 {
-    public const string Introduction = "Погнали";
+    public const string Introduction = "Вы выбрали функцию заказа академической справки, которая подтверждает факт " +
+                                       "обучения в учебном заведении.";
 
-    public const string EnterPatronymic = "Введите отчество пж";
-    public const string InvalidMessageFormat = "Текстом ответь ёпта";
+    public const string EnterPatronymic = "Для заказа справки, пожалуйста, укажите Ваше отчество. Это необходимо для " +
+                                          "точной идентификации.";
 
-    public const string EnterGroupName = "Введите вашу группу пж";
-    public const string InvalidGroupName = "Бля, нормально введи";
+    public const string InvalidMessageFormat = "Кажется, я Вас не понимаю. Введите корректное значение.";
 
-    public const string EnterReferencesCount = "Скок надо ёпта";
-    public const string InvalidNumberFormat = "Чё с числом нах";
+    public const string EnterGroupName = "Укажите Вашу учебную группу.";
+    public const string InvalidGroupName = "Укажите корректную учебную группу";
 
-    public const string ChooseReferenceOrderPurpose = "Нахуя справка?";
-    public const string InvalidPurpose = "Сам понюхал, чё пукнул?";
+    public const string EnterReferencesCount = "Сколько справок Вам необходимо заказать? Пожалуйста, укажите " +
+                                               "количество числом без лишних символов.";
 
-    public const string EnterYourOrderPurpose = "Ну и нахуя?";
+    public const string InvalidNumberFormat = "Пожалуйста, укажите корректное число.";
 
-    public const string ChooseReferenceObtainingMethod = "Как забирать будешь, мудила?";
+    public const string ChooseReferenceOrderPurpose = "Для дальнейшего оформления, пожалуйста, укажите цель " +
+                                                      "получения справки.";
+
+    public const string InvalidPurpose = "Пожалуйста, выберите цель заказа из предложенных.";
+
+    public const string EnterYourOrderPurpose = "Укажите свою цель получения справки.";
+
+    public const string ChooseReferenceObtainingMethod = "Последний шаг: укажите, пожалуйста, удобный для Вас способ " +
+                                                         "получения справки. Вы можете забрать её лично в деканате " +
+                                                         "или выбрать электронную версию, которую мы отправим " +
+                                                         "электронную почту.";
+
     public const string SelfPickupObtainingMethod = "Заберу лично";
     public const string SendMeAnEmailObtainingMethod = "Пришлите по эл. почте";
-    public const string InvalidObtainingMethod = "Выбери нормально бля";
+    public const string EmailObtainingMethodTemplate = "Пришлите на почту {0}";
+    public const string InvalidObtainingMethod = "Пожалуйста, выберите корректный способ получения";
 
-    public const string EnterYourEmail = "Введи почту бля";
-    public const string InvalidEmailFormat = "Нормально почту введи бля";
+    public const string EnterYourEmail = "Пожалуйста, введите Вашу электронную почту, на которую будет доставлена " +
+                                         "справка.";
+
+    public const string InvalidEmailFormat = "Введённый адрес электронной почты некорректный. Пожалуйста, проверьте " +
+                                             "его и попробуйте снова.";
 
     public const string FinalOrderVersionMessageTemplate = """
-                                                            Давайте проверим, всё ли верно:
+                                                           Давайте проверим, всё ли верно:
 
-                                                            Ваше ФИО - {0}
-                                                            Ваша группа - {1}
-                                                            Количество справок - {2}
-                                                            Цель заказа - {3}
-                                                            Способ получения - {4}
+                                                           Ваше ФИО - {0}
+                                                           Ваша группа - {1}
+                                                           Количество справок - {2}
+                                                           Цель заказа - {3}
+                                                           Способ получения - {4}
 
-                                                            Верно?
-                                                            """;
+                                                           Верно?
+                                                           """;
 
-    public const string InvalidIsFinalVersionRightAnswer = "Сука ну выбери нормально блять";
-    public const string OkLetsStartAgain = "Хорошо, го по-новой";
+    public const string InvalidIsFinalVersionRightAnswer = "Пожалуйста, выберите предложенный вариант ответа.";
+    public const string OkLetsStartAgain = "Хорошо, давайте начнем оформление заново.";
 
     public const string MessageToMethodistTemplate = """
                                                      Здравствуйте, хочу заказать справку.
-                                                     
+
                                                      ФИО - {0}
                                                      Группа - {1}
                                                      Количество справок - {2}
                                                      Цель заказа - {3}
                                                      Способ получения - {4}
                                                      """;
+
+    public const string Completed = "Справка была успешно заказана, ваше сообщение отправлено методисту";
 }

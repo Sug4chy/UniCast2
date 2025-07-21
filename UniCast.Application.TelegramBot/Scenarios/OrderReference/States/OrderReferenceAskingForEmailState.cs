@@ -55,7 +55,8 @@ public sealed partial class OrderReferenceAskingForEmailState : IOrderReferenceS
             return;
         }
 
-        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.Email] = update.Message.Text;
+        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.ObtainingMethod] =
+            string.Format(OrderReferenceScenarioMessages.EmailObtainingMethodTemplate, update.Message.Text);
         await _dataContext.SaveChangesAsync(ct);
 
         await _scenarioExecutor.ChangeStateAsync(
