@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using UniCast.Application.Abstractions.Moodle;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
@@ -45,21 +46,22 @@ public sealed class RegistrationWaitingForMoodlePasswordEnteredState : IRegistra
 
     public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
-        if (update.Message!.Text is null)
+        if (!MessageIdsToDeleteByChats.TryGetValue(chat.ExtId, out var value))
+        {
+            value = new Queue<int>();
+            MessageIdsToDeleteByChats[chat.ExtId] = value;
+        }
+
+        if (update is { Type: UpdateType.Message, Message.Text: null })
         {
             await SendError(chat, RegistrationScenarioMessages.PleaseEnterPassword, ct);
+            value.Enqueue(update.Message!.Id);
             return;
         }
 
         var moodleAccount = await GetMoodleAccountAsync(
             chat.CurrentScenarioArgs[RegistrationScenarioArgsKeys.MoodleUsername], ct);
         string password = update.Message!.Text!;
-
-        if (!MessageIdsToDeleteByChats.TryGetValue(chat.ExtId, out var value))
-        {
-            value = new Queue<int>();
-            MessageIdsToDeleteByChats[chat.ExtId] = value;
-        }
 
         value.Enqueue(update.Message.Id);
         while (value.TryDequeue(out int messageId))
