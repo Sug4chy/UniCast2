@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Messages.Scenarios;
@@ -31,6 +32,7 @@ public sealed partial class OrderReferenceAskingForGroupState : IOrderReferenceS
         => _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
             text: OrderReferenceScenarioMessages.EnterGroupName,
+            replyMarkup: new ReplyKeyboardRemove(),
             ct: ct);
 
     public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
