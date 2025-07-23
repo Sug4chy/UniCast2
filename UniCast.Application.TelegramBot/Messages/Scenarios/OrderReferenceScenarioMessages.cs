@@ -6,7 +6,7 @@ public static class OrderReferenceScenarioMessages
                                        "обучения в учебном заведении.";
 
     public const string EnterPatronymic = "Для заказа справки, пожалуйста, укажите Ваше отчество. Это необходимо для " +
-                                          "точной идентификации.";
+                                          "точной идентификации. Если у вас его нет, то нажмите кнопку 'Пропустить'.";
 
     public const string InvalidMessageFormat = "Кажется, я Вас не понимаю. Введите корректное значение.";
 
