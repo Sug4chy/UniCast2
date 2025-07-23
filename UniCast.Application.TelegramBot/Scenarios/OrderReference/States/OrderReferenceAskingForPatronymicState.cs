@@ -4,6 +4,7 @@ using Telegram.Bot.Types.Enums;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Messages.Scenarios;
+using UniCast.Application.TelegramBot.Utils;
 using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.OrderReference.States;
@@ -36,6 +37,15 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
             await _telegramMessageManager.SendMessageAsync(
                 chatId: chat.ExtId,
                 text: OrderReferenceScenarioMessages.InvalidMessageFormat,
+                ct: ct);
+            return;
+        }
+
+        if (!PatronymicValidator.Validate(update.Message.Text))
+        {
+            await _telegramMessageManager.SendMessageAsync(
+                chatId: chat.ExtId,
+                text: OrderReferenceScenarioMessages.InvalidPatronymic,
                 ct: ct);
             return;
         }
