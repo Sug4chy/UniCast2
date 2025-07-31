@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using UniCast.Application.Abstractions.Moodle;
@@ -20,6 +21,7 @@ public sealed class RegistrationWaitingForMoodlePasswordEnteredState : IRegistra
     private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly IMoodleClient _moodleClient;
     private readonly IDataContext _dataContext;
+    private readonly ILogger<RegistrationWaitingForMoodlePasswordEnteredState> _logger;
 
     public RegistrationWaitingForMoodlePasswordEnteredState(
         RegistrationScenarioExecutor scenarioExecutor,
@@ -29,6 +31,7 @@ public sealed class RegistrationWaitingForMoodlePasswordEnteredState : IRegistra
         _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
         _moodleClient = serviceProvider.GetRequiredService<IMoodleClient>();
+        _logger = serviceProvider.GetRequiredService<ILogger<RegistrationWaitingForMoodlePasswordEnteredState>>();
     }
 
     public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
@@ -75,7 +78,7 @@ public sealed class RegistrationWaitingForMoodlePasswordEnteredState : IRegistra
         var tokenResult = await _moodleClient.LoginAsync(moodleAccount.Username, password, ct);
         if (tokenResult.IsFailure)
         {
-            await SendError(chat, tokenResult.Error!, ct);
+            await SendError(chat, "Кажется, что-то пошло не так. Пожалуйста, повторите попытку позже", ct);
             return;
         }
 
@@ -90,6 +93,7 @@ public sealed class RegistrationWaitingForMoodlePasswordEnteredState : IRegistra
 
     private async Task SendError(TelegramChat chat, string errorText, CancellationToken ct = default)
     {
+        _logger.LogError(errorText);
         var message = await _telegramMessageManager.SendMessageAsync(
             chat: chat,
             text: errorText,
