@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Moodle;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
@@ -73,6 +74,7 @@ public sealed class OrderReferenceCompletedState : IOrderReferenceState
         await _telegramMessageManager.SendMessageAsync(
             chatId: update.Message!.Chat.Id,
             text: OrderReferenceScenarioMessages.Completed,
+            replyMarkup: new ReplyKeyboardRemove(),
             ct: ct);
 
         await _scenarioExecutor.ClearScenarioAsync(chat, ct);
