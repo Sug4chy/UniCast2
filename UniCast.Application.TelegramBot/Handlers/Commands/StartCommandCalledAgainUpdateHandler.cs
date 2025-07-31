@@ -25,7 +25,7 @@ public sealed class StartCommandCalledAgainUpdateHandler : IUpdateHandler
            update.Message.Text == "/start"
            && await _dataContext.TelegramChats
                .AnyAsync(x => x.ExtId == update.Message.Chat.Id &&
-                              x.StudentId == null, ct);
+                              x.StudentId != null, ct);
 
     public Task HandleAsync(Update update, CancellationToken ct = default)
         => _telegramMessageManager.SendMessageAsync(
