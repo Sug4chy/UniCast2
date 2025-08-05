@@ -29,4 +29,9 @@ public interface ITelegramMessageManager
         long chatId,
         int messageId,
         CancellationToken ct = default);
+
+    Task PinMessageAsync(
+        long chatId,
+        int messageId,
+        CancellationToken ct = default);
 }

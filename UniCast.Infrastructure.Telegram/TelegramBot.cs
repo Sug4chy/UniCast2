@@ -80,4 +80,10 @@ public sealed class TelegramBot : ITelegramMessageManager
             chatId: chatId,
             messageId: messageId,
             cancellationToken: ct);
+
+    public Task PinMessageAsync(long chatId, int messageId, CancellationToken ct = default)
+        => _telegramBotClient.PinChatMessage(
+            chatId: chatId,
+            messageId: messageId,
+            cancellationToken: ct);
 }
