@@ -21,10 +21,13 @@ public sealed class RegistrationStartedState : IRegistrationState
 
     public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
-        await _telegramMessageManager.SendMessageAsync(
-            chatId: chat.ExtId, 
+        await _telegramMessageManager.DeleteMessageAsync(chatId: chat.ExtId, messageId: update.Message!.Id, ct: ct);
+
+        var message = await _telegramMessageManager.SendMessageAsync(
+            chat: chat, 
             text: RegistrationScenarioMessages.Greeting, 
             ct: ct);
+        await _telegramMessageManager.PinMessageAsync(chatId: chat.ExtId, messageId: message.ExtId, ct: ct);
 
         await _scenarioExecutor.ChangeStateAsync(
             chat,

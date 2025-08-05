@@ -56,7 +56,7 @@ public sealed class RegistrationStudentRecognizedState : IRegistrationState
                     ct: ct);
                 await _scenarioExecutor.ChangeStateAsync(
                     chat: chat,
-                    newState: _scenarioExecutor.GetState((int)RegistrationScenarioState.MoodleUsernameEntered),
+                    newState: _scenarioExecutor.GetState((int)RegistrationScenarioState.WaitingForMoodleUsernameEntered),
                     update: update,
                     ct: ct);
                 break;

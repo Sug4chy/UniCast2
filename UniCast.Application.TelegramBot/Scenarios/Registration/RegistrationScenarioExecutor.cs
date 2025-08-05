@@ -42,8 +42,6 @@ public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrati
                 => RegistrationScenarioState.Started,
             RegistrationWaitingForMoodleUsernameEnteredState 
                 => RegistrationScenarioState.WaitingForMoodleUsernameEntered,
-            RegistrationMoodleUsernameEnteredState 
-                => RegistrationScenarioState.MoodleUsernameEntered,
             RegistrationStudentRecognizedState 
                 => RegistrationScenarioState.StudentRecognized,
             RegistrationWaitingForMoodlePasswordEnteredState 
@@ -60,8 +58,6 @@ public sealed class RegistrationScenarioExecutor : IScenarioExecutor<IRegistrati
                 new RegistrationStartedState(this, _serviceProvider),
             RegistrationScenarioState.WaitingForMoodleUsernameEntered =>
                 new RegistrationWaitingForMoodleUsernameEnteredState(this, _serviceProvider),
-            RegistrationScenarioState.MoodleUsernameEntered =>
-                new RegistrationMoodleUsernameEnteredState(this, _serviceProvider),
             RegistrationScenarioState.StudentRecognized =>
                 new RegistrationStudentRecognizedState(this, _serviceProvider),
             RegistrationScenarioState.WaitingForMoodlePasswordEntered =>
