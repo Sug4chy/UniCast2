@@ -36,6 +36,11 @@ public sealed class RegistrationWaitingForMoodlePasswordEnteredState : IRegistra
 
     public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
+        await _telegramMessageManager.DeleteMessageAsync(
+            chatId: chat.ExtId,
+            messageId: int.Parse(chat.CurrentScenarioArgs[RegistrationScenarioArgsKeys.MessagesToDeleteIds]),
+            ct: ct);
+
         var message = await _telegramMessageManager.SendMessageAsync(
             chat: chat,
             text: RegistrationScenarioMessages.EnterPassword,
