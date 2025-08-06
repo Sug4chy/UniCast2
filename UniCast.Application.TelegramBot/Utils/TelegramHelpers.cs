@@ -12,4 +12,11 @@ public static class TelegramHelpers
             UpdateType.CallbackQuery => update.CallbackQuery!.Message!.Chat.Id,
             _ => throw exceptionToThrow ?? new ArgumentNullException(nameof(update))
         };
+
+    public static int GetMessageId(Update update)
+        => update.Type switch
+        {
+            UpdateType.Message => update.Message!.Id,
+            _ => throw new ArgumentOutOfRangeException(nameof(update))
+        };
 }

@@ -19,7 +19,7 @@ public static class RegistrationScenarioMessages
     public const string EnterUsername = "Пожалуйста, введите свой логин от факультетского Moodle, чтобы мы могли " +
                                         "подтвердить Вашу личность и приступить к работе!";
 
-    public const string PleaseEnterUsername = "Пожалуйста, введите свой логин.";
+    public const string InvalidUsernameMessageFormat = "Пожалуйста, введите свой логин.";
 
     public const string CantRecognizeUserByUsername = "К сожалению, введённый логин не найден. Пожалуйста, проверьте " +
                                                       "правильность введённых данных и введите логин снова.";

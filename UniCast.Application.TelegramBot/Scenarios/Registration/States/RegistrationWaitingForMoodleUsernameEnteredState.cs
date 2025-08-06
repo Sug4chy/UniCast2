@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
+using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Messages.Scenarios;
 using UniCast.Domain.Telegram.Entities;
@@ -10,6 +11,7 @@ public sealed class RegistrationWaitingForMoodleUsernameEnteredState : IRegistra
 {
     private readonly RegistrationScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
+    private readonly IDataContext _dataContext;
 
     public RegistrationWaitingForMoodleUsernameEnteredState(
         RegistrationScenarioExecutor scenarioExecutor,
@@ -17,14 +19,18 @@ public sealed class RegistrationWaitingForMoodleUsernameEnteredState : IRegistra
     {
         _scenarioExecutor = scenarioExecutor;
         _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
+        _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
 
     public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
-        await _telegramMessageManager.SendMessageAsync(
-            chatId: chat.ExtId,
+        var message = await _telegramMessageManager.SendMessageAsync(
+            chat: chat,
             text: RegistrationScenarioMessages.EnterUsername,
             ct: ct);
+
+        chat.CurrentScenarioArgs[RegistrationScenarioArgsKeys.MessagesToDeleteIds] = message.ExtId.ToString();
+        await _dataContext.SaveChangesAsync(ct);
 
         await _scenarioExecutor.ChangeStateAsync(
             chat: chat,
