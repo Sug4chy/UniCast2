@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Moodle;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
@@ -40,6 +41,7 @@ public sealed class RefreshTokenStartedState : IRefreshTokenState
         var message = await _telegramMessageManager.SendMessageAsync(
             chat: chat,
             text: RefreshTokenScenarioMessages.PasswordHasExpired,
+            replyMarkup: new ReplyKeyboardRemove(),
             ct: ct);
 
         MessageIdsToDeleteByChats[chat.ExtId].Enqueue(message.ExtId);
