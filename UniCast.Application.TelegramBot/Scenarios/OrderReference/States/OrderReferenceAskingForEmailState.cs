@@ -6,6 +6,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Messages.Scenarios;
+using UniCast.Application.TelegramBot.Utils;
 using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.OrderReference.States;
@@ -25,32 +26,62 @@ public sealed partial class OrderReferenceAskingForEmailState : IOrderReferenceS
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
 
+    private async Task HandleErrorAsync(
+        TelegramChat chat,
+        int messageId,
+        string errorText,
+        CancellationToken ct = default)
+    {
+        int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
+        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, botsPrevMessageId, ct);
+        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
+
+        var message = await _telegramMessageManager.SendMessageAsync(chat: chat, text: errorText, ct: ct);
+        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
+        await _dataContext.SaveChangesAsync(ct);
+    }
+
+    private async Task ClearStateMessagesAsync(TelegramChat chat, int userMessageId, CancellationToken ct = default)
+    {
+        await _telegramMessageManager.DeleteMessageAsync(
+            chatId: chat.ExtId,
+            messageId: int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]),
+            ct: ct);
+        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, userMessageId, ct);
+    }
+
     [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")]
     private partial Regex EmailRegex();
 
-    public Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
-        => _telegramMessageManager.SendMessageAsync(
-            chatId: chat.ExtId,
+    public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
+    {
+        var message = await _telegramMessageManager.SendMessageAsync(
+            chat: chat,
             text: OrderReferenceScenarioMessages.EnterYourEmail,
             replyMarkup: new ReplyKeyboardRemove(),
             ct: ct);
+        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
+        await _dataContext.SaveChangesAsync(ct);
+    }
 
     public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         if (update is not { Type: UpdateType.Message, Message: not null, Message.Text: not null })
         {
-            await _telegramMessageManager.SendMessageAsync(
-                chatId: chat.ExtId,
-                text: OrderReferenceScenarioMessages.InvalidMessageFormat,
+            await HandleErrorAsync(
+                chat: chat,
+                messageId: TelegramHelpers.GetMessageId(update),
+                errorText: OrderReferenceScenarioMessages.InvalidMessageFormat,
                 ct: ct);
             return;
         }
 
         if (!EmailRegex().IsMatch(update.Message.Text))
         {
-            await _telegramMessageManager.SendMessageAsync(
-                chatId: chat.ExtId,
-                text: OrderReferenceScenarioMessages.InvalidEmailFormat,
+            await HandleErrorAsync(
+                chat: chat,
+                messageId: TelegramHelpers.GetMessageId(update),
+                errorText: OrderReferenceScenarioMessages.InvalidEmailFormat,
                 ct: ct);
             return;
         }
@@ -58,6 +89,8 @@ public sealed partial class OrderReferenceAskingForEmailState : IOrderReferenceS
         chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.ObtainingMethod] =
             string.Format(OrderReferenceScenarioMessages.EmailObtainingMethodTemplate, update.Message.Text);
         await _dataContext.SaveChangesAsync(ct);
+
+        await ClearStateMessagesAsync(chat: chat, userMessageId: update.Message.Id, ct: ct);
 
         await _scenarioExecutor.ChangeStateAsync(
             chat: chat,
