@@ -75,7 +75,7 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
             chatId: chat.ExtId,
             messageId: int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]),
             ct: ct);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, update.Message.MessageId, ct);
+        await _telegramMessageManager.DeleteMessageAsync(chatId: chat.ExtId, messageId: update.Message.Id, ct: ct);
 
         await _scenarioExecutor.ChangeStateAsync(
             chat: chat,
