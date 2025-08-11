@@ -27,20 +27,25 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
 
-    public Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
-        => _telegramMessageManager.SendMessageAsync(
-            chatId: chat.ExtId,
+    public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
+    {
+        var message = await _telegramMessageManager.SendMessageAsync(
+            chat: chat,
             text: OrderReferenceScenarioMessages.EnterPatronymic,
             replyMarkup: new ReplyKeyboardMarkup(new KeyboardButton(SkipButtonText)) { ResizeKeyboard = true },
             ct: ct);
+        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
+        await _dataContext.SaveChangesAsync(ct);
+    }
 
     public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         if (update is not { Type: UpdateType.Message, Message: not null, Message.Text: not null })
         {
-            await _telegramMessageManager.SendMessageAsync(
-                chatId: chat.ExtId,
-                text: OrderReferenceScenarioMessages.InvalidMessageFormat,
+            await HandleErrorAsync(
+                chat: chat,
+                messageId: TelegramHelpers.GetMessageId(update),
+                errorText: OrderReferenceScenarioMessages.InvalidMessageFormat,
                 ct: ct);
             return;
         }
@@ -53,9 +58,10 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
         {
             if (!PatronymicValidator.Validate(update.Message.Text))
             {
-                await _telegramMessageManager.SendMessageAsync(
-                    chatId: chat.ExtId,
-                    text: OrderReferenceScenarioMessages.InvalidPatronymic,
+                await HandleErrorAsync(
+                    chat: chat,
+                    messageId: TelegramHelpers.GetMessageId(update),
+                    errorText: OrderReferenceScenarioMessages.InvalidPatronymic,
                     ct: ct);
                 return;
             }
@@ -65,10 +71,31 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
 
         await _dataContext.SaveChangesAsync(ct);
 
+        await _telegramMessageManager.DeleteMessageAsync(
+            chatId: chat.ExtId,
+            messageId: int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]),
+            ct: ct);
+        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, update.Message.MessageId, ct);
+
         await _scenarioExecutor.ChangeStateAsync(
             chat: chat,
             newState: _scenarioExecutor.GetState((int)OrderReferenceState.AskingForGroup),
             update: update,
             ct: ct);
+    }
+
+    private async Task HandleErrorAsync(
+        TelegramChat chat,
+        int messageId,
+        string errorText,
+        CancellationToken ct = default)
+    {
+        int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
+        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, botsPrevMessageId, ct);
+        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
+
+        var message = await _telegramMessageManager.SendMessageAsync(chat: chat, text: errorText, ct: ct);
+        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
+        await _dataContext.SaveChangesAsync(ct);
     }
 }
