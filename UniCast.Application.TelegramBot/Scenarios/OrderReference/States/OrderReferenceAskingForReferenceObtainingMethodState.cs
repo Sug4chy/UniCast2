@@ -48,7 +48,11 @@ public sealed class OrderReferenceAskingForReferenceObtainingMethodState : IOrde
         await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, botsPrevMessageId, ct);
         await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
 
-        var message = await _telegramMessageManager.SendMessageAsync(chat: chat, text: errorText, ct: ct);
+        var message = await _telegramMessageManager.SendMessageAsync(
+            chat: chat,
+            text: errorText,
+            replyMarkup: ObtainingMethodsKeyboard,
+            ct: ct);
         chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
         await _dataContext.SaveChangesAsync(ct);
     }

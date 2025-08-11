@@ -14,6 +14,11 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
 {
     private const string SkipButtonText = "Пропустить";
 
+    private static readonly ReplyKeyboardMarkup SkipPatronymicInputKeyboard = new(new KeyboardButton(SkipButtonText))
+    {
+        ResizeKeyboard = true
+    };
+
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly IDataContext _dataContext;
@@ -32,7 +37,7 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
         var message = await _telegramMessageManager.SendMessageAsync(
             chat: chat,
             text: OrderReferenceScenarioMessages.EnterPatronymic,
-            replyMarkup: new ReplyKeyboardMarkup(new KeyboardButton(SkipButtonText)) { ResizeKeyboard = true },
+            replyMarkup: SkipPatronymicInputKeyboard,
             ct: ct);
         chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
         await _dataContext.SaveChangesAsync(ct);
@@ -94,7 +99,11 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
         await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, botsPrevMessageId, ct);
         await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
 
-        var message = await _telegramMessageManager.SendMessageAsync(chat: chat, text: errorText, ct: ct);
+        var message = await _telegramMessageManager.SendMessageAsync(
+            chat: chat,
+            text: errorText,
+            replyMarkup: SkipPatronymicInputKeyboard,
+            ct: ct);
         chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
         await _dataContext.SaveChangesAsync(ct);
     }
