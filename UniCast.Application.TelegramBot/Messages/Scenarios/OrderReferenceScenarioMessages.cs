@@ -56,7 +56,6 @@ public static class OrderReferenceScenarioMessages
                                                            """;
 
     public const string InvalidIsFinalVersionRightAnswer = "Пожалуйста, выберите предложенный вариант ответа.";
-    public const string OkLetsStartAgain = "Хорошо, давайте начнем оформление заново.";
 
     public const string MessageToMethodistTemplate = """
                                                      Здравствуйте, хочу заказать справку.
