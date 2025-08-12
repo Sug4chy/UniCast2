@@ -2,7 +2,6 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Messages.Scenarios;
@@ -29,12 +28,27 @@ public sealed partial class OrderReferenceAskingForGroupState : IOrderReferenceS
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
 
+    
+    private async Task HandleErrorAsync(
+        TelegramChat chat,
+        int messageId,
+        string errorText,
+        CancellationToken ct = default)
+    {
+        int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
+        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, botsPrevMessageId, ct);
+        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
+
+        var message = await _telegramMessageManager.SendMessageAsync(chat: chat, text: errorText, ct: ct);
+        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
+        await _dataContext.SaveChangesAsync(ct);
+    }
+
     public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         var message = await _telegramMessageManager.SendMessageAsync(
             chat: chat,
             text: OrderReferenceScenarioMessages.EnterGroupName,
-            replyMarkup: new ReplyKeyboardRemove(),
             ct: ct);
         chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
         await _dataContext.SaveChangesAsync(ct);
@@ -42,6 +56,8 @@ public sealed partial class OrderReferenceAskingForGroupState : IOrderReferenceS
 
     public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
+        await _scenarioExecutor.CancelAndThrowIfCancellationRequestedAsync(chat, update, ct);
+
         if (update is not { Type: UpdateType.Message, Message: not null, Message.Text: not null })
         {
             await HandleErrorAsync(
@@ -76,20 +92,5 @@ public sealed partial class OrderReferenceAskingForGroupState : IOrderReferenceS
             newState: _scenarioExecutor.GetState((int)OrderReferenceState.AskingForReferencesCount),
             update: update,
             ct: ct);
-    }
-
-    private async Task HandleErrorAsync(
-        TelegramChat chat,
-        int messageId,
-        string errorText,
-        CancellationToken ct = default)
-    {
-        int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, botsPrevMessageId, ct);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
-
-        var message = await _telegramMessageManager.SendMessageAsync(chat: chat, text: errorText, ct: ct);
-        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
-        await _dataContext.SaveChangesAsync(ct);
     }
 }

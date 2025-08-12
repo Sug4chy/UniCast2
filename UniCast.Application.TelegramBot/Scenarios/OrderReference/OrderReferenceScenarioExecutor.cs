@@ -1,7 +1,13 @@
+using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Persistence;
+using UniCast.Application.Abstractions.Telegram;
+using UniCast.Application.TelegramBot.Exceptions;
+using UniCast.Application.TelegramBot.Messages.Scenarios;
 using UniCast.Application.TelegramBot.Scenarios.OrderReference.States;
+using UniCast.Application.TelegramBot.Utils;
 using UniCast.Domain.Telegram.Entities;
 using UniCast.Domain.Telegram.ValueObjects.Enums;
 
@@ -11,6 +17,7 @@ public sealed class OrderReferenceScenarioExecutor : IScenarioExecutor<IOrderRef
 {
     private readonly IDataContext _dataContext;
     private readonly IServiceProvider _serviceProvider;
+    private readonly ITelegramMessageManager _telegramMessageManager;
 
     public Scenario Scenario => Scenario.OrderReference;
 
@@ -18,6 +25,20 @@ public sealed class OrderReferenceScenarioExecutor : IScenarioExecutor<IOrderRef
     {
         _dataContext = dataContext;
         _serviceProvider = serviceProvider;
+        _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
+    }
+
+    private async Task ClearScenarioMessagesAsync(TelegramChat chat, int userMessageId, CancellationToken ct = default)
+    {
+        int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
+        await _telegramMessageManager.DeleteMessageAsync(
+            chatId: chat.ExtId,
+            messageId: botsPrevMessageId,
+            ct: ct);
+        if (userMessageId != botsPrevMessageId)
+        {
+            await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, userMessageId, ct);
+        }
     }
 
     public async Task StartScenarioAsync(TelegramChat chat, Update update, CancellationToken ct = default)
@@ -81,7 +102,7 @@ public sealed class OrderReferenceScenarioExecutor : IScenarioExecutor<IOrderRef
             OrderReferenceAskingForReferencesCountState => OrderReferenceState.AskingForReferencesCount,
             OrderReferenceAskingForReferenceOrderPurposeState => OrderReferenceState.AskingForReferenceOrderPurpose,
             OrderReferenceOtherOrderPurposeSelectedState => OrderReferenceState.OtherOrderPurposeSelected,
-            OrderReferenceAskingForReferenceObtainingMethodState => 
+            OrderReferenceAskingForReferenceObtainingMethodState =>
                 OrderReferenceState.AskingForReferenceObtainingMethod,
             OrderReferenceAskingForEmailState => OrderReferenceState.AskingForEmail,
             OrderReferenceShowingReferenceFinalVersionState => OrderReferenceState.ShowingReferenceFinalVersion,
@@ -95,4 +116,25 @@ public sealed class OrderReferenceScenarioExecutor : IScenarioExecutor<IOrderRef
         => ValueTask.FromResult(update.Type is UpdateType.Message &&
                                 update.Message!.Text is not null &&
                                 update.Message.Text is "/order_reference");
+
+    public async Task CancelAndThrowIfCancellationRequestedAsync(
+        TelegramChat chat,
+        Update update,
+        CancellationToken ct = default)
+    {
+        if (update is not { Type: UpdateType.Message, Message.Text: "Отмена" })
+        {
+            return;
+        }
+
+        await ClearScenarioMessagesAsync(chat, TelegramHelpers.GetMessageId(update), ct);
+        await ClearScenarioAsync(chat, ct);
+        await _telegramMessageManager.SendMessageAsync(
+            chatId: chat.ExtId,
+            text: OrderReferenceScenarioMessages.Cancelled,
+            replyMarkup: new ReplyKeyboardRemove(),
+            ct: ct);
+
+        throw new ScenarioCancelledException(nameof(Scenario.OrderReference));
+    }
 }

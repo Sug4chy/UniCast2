@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Messages.Scenarios;
@@ -45,7 +44,6 @@ public sealed class OrderReferenceOtherOrderPurposeSelectedState : IOrderReferen
         var message = await _telegramMessageManager.SendMessageAsync(
             chat: chat,
             text: OrderReferenceScenarioMessages.EnterYourOrderPurpose,
-            replyMarkup: new ReplyKeyboardRemove(),
             ct: ct);
         chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
         await _dataContext.SaveChangesAsync(ct);
@@ -53,6 +51,8 @@ public sealed class OrderReferenceOtherOrderPurposeSelectedState : IOrderReferen
 
     public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
+        await _scenarioExecutor.CancelAndThrowIfCancellationRequestedAsync(chat, update, ct);
+
         if (update is not { Type: UpdateType.Message, Message: not null, Message.Text: not null })
         {
             await HandleErrorAsync(

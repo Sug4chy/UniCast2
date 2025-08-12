@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Messages.Scenarios;
 using UniCast.Domain.Telegram.Entities;
@@ -10,6 +11,11 @@ namespace UniCast.Application.TelegramBot.Scenarios.OrderReference.States;
 
 public sealed class OrderReferenceStartedState : IOrderReferenceState
 {
+    private static readonly ReplyKeyboardMarkup CancelOrderKeyboard = new(new KeyboardButton("Отмена"))
+    {
+        ResizeKeyboard = true
+    };
+
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly ILogger<OrderReferenceStartedState> _logger;
@@ -28,11 +34,12 @@ public sealed class OrderReferenceStartedState : IOrderReferenceState
         _logger.LogInformation("Started {ScenarioName} for chat {ChatID}", 
             nameof(Scenario.OrderReference), chat.Id);
 
+        await _telegramMessageManager.DeleteMessageAsync(chatId: chat.ExtId, messageId: update.Message!.Id, ct: ct);
         await _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
             text: OrderReferenceScenarioMessages.Introduction,
+            replyMarkup: CancelOrderKeyboard,
             ct: ct);
-        await _telegramMessageManager.DeleteMessageAsync(chatId: chat.ExtId, messageId: update.Message!.Id, ct: ct);
 
         await _scenarioExecutor.ChangeStateAsync(
             chat: chat,

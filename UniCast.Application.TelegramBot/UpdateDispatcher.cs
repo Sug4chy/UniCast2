@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
+using UniCast.Application.TelegramBot.Exceptions;
 using UniCast.Application.TelegramBot.Handlers;
 using UniCast.Application.TelegramBot.Scenarios;
 using UniCast.Application.TelegramBot.Utils;
@@ -13,8 +14,6 @@ namespace UniCast.Application.TelegramBot;
 
 public sealed class UpdateDispatcher
 {
-    private static readonly Exception ExceptionToIgnore = new();
-
     private readonly IEnumerable<IUpdateHandler> _handlers;
     private readonly IEnumerable<IScenarioExecutor> _scenarioExecutors;
     private readonly IDataContext _dataContext;
@@ -46,7 +45,7 @@ public sealed class UpdateDispatcher
                 return;
             }
 
-            var chat = await GetChatByExtIdAsync(TelegramHelpers.GetChatId(update, ExceptionToIgnore), ct)
+            var chat = await GetChatByExtIdAsync(TelegramHelpers.GetChatId(update), ct)
                        ?? await CreateFromUpdateAsync(update, ct);
 
             if (chat.CurrentScenario is null)
@@ -62,17 +61,22 @@ public sealed class UpdateDispatcher
                     .HandleUserInputAsync(chat, update, ct) ?? Task.CompletedTask);
             }
         }
+        catch (ScenarioCancelledException ex)
+        {
+            _logger.LogInformation(ex, ex.Message);
+        }
+        catch (UnknownUpdateTypeException ex)
+        {
+            _logger.LogError(ex, "Exception message: '{Message}'", ex.Message);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exception message: '{Message}'", ex.Message);
-            if (ex != ExceptionToIgnore)
-            {
-                await _telegramMessageManager.SendMessageAsync(
-                    chatId: TelegramHelpers.GetChatId(update, ExceptionToIgnore),
-                    text: "Кажется, что-то пошло не так...",
-                    ct: ct
-                );
-            }
+            await _telegramMessageManager.SendMessageAsync(
+                chatId: TelegramHelpers.GetChatId(update),
+                text: "Кажется, что-то пошло не так...",
+                ct: ct
+            );
         }
     }
 

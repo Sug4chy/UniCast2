@@ -16,12 +16,13 @@ public sealed class OrderReferenceShowingReferenceFinalVersionState : IOrderRefe
     private const string Yes = "Да";
     private const string No = "Нет";
 
-    private static readonly ReplyKeyboardMarkup YesOrNoKeyboard = new(
-        (IEnumerable<KeyboardButton>) [new KeyboardButton(Yes), new KeyboardButton(No)]
-    )
-    {
-        ResizeKeyboard = true
-    };
+    private static readonly InlineKeyboardMarkup YesOrNoKeyboard = new(
+        (IEnumerable<InlineKeyboardButton>)
+        [
+            InlineKeyboardButton.WithCallbackData(Yes),
+            InlineKeyboardButton.WithCallbackData(No)
+        ]
+    );
 
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
@@ -44,7 +45,10 @@ public sealed class OrderReferenceShowingReferenceFinalVersionState : IOrderRefe
     {
         int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
         await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, botsPrevMessageId, ct);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
+        if (botsPrevMessageId != messageId)
+        {
+            await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
+        }
 
         var message = await _telegramMessageManager.SendMessageAsync(
             chat: chat,
@@ -55,18 +59,15 @@ public sealed class OrderReferenceShowingReferenceFinalVersionState : IOrderRefe
         await _dataContext.SaveChangesAsync(ct);
     }
 
-    private async Task ClearStateMessagesAsync(TelegramChat chat, int userMessageId, CancellationToken ct = default)
-    {
-        await _telegramMessageManager.DeleteMessageAsync(
+    private Task ClearStateMessagesAsync(TelegramChat chat, CancellationToken ct = default) 
+        => _telegramMessageManager.DeleteMessageAsync(
             chatId: chat.ExtId,
             messageId: int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]),
             ct: ct);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, userMessageId, ct);
-    }
 
     private async Task HandleYesAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
-        await ClearStateMessagesAsync(chat: chat, userMessageId: update.Message!.Id, ct: ct);
+        await ClearStateMessagesAsync(chat: chat, ct: ct);
 
         await _scenarioExecutor.ChangeStateAsync(
             chat: chat,
@@ -77,7 +78,7 @@ public sealed class OrderReferenceShowingReferenceFinalVersionState : IOrderRefe
 
     private async Task HandleNoAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
-        await ClearStateMessagesAsync(chat: chat, userMessageId: update.Message!.Id, ct: ct);
+        await ClearStateMessagesAsync(chat: chat, ct: ct);
 
         chat.CurrentScenarioArgs.Clear();
         await _dataContext.SaveChangesAsync(ct);
@@ -114,7 +115,9 @@ public sealed class OrderReferenceShowingReferenceFinalVersionState : IOrderRefe
 
     public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
-        if (update is not { Type: UpdateType.Message, Message: not null, Message.Text: not null })
+        await _scenarioExecutor.CancelAndThrowIfCancellationRequestedAsync(chat, update, ct);
+
+        if (update is not { Type: UpdateType.CallbackQuery, CallbackQuery.Data: not null })
         {
             await HandleErrorAsync(
                 chat: chat,
@@ -124,7 +127,7 @@ public sealed class OrderReferenceShowingReferenceFinalVersionState : IOrderRefe
             return;
         }
 
-        switch (update.Message.Text)
+        switch (update.CallbackQuery.Data)
         {
             case Yes:
                 await HandleYesAsync(chat, update, ct);

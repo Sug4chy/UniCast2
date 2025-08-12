@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
@@ -14,10 +13,8 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
 {
     private const string SkipButtonText = "Пропустить";
 
-    private static readonly ReplyKeyboardMarkup SkipPatronymicInputKeyboard = new(new KeyboardButton(SkipButtonText))
-    {
-        ResizeKeyboard = true
-    };
+    private static readonly InlineKeyboardMarkup SkipPatronymicInputKeyboard = 
+        new(InlineKeyboardButton.WithCallbackData(SkipButtonText));
 
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
@@ -30,63 +27,6 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
         _scenarioExecutor = scenarioExecutor;
         _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
-    }
-
-    public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
-    {
-        var message = await _telegramMessageManager.SendMessageAsync(
-            chat: chat,
-            text: OrderReferenceScenarioMessages.EnterPatronymic,
-            replyMarkup: SkipPatronymicInputKeyboard,
-            ct: ct);
-        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
-        await _dataContext.SaveChangesAsync(ct);
-    }
-
-    public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
-    {
-        if (update is not { Type: UpdateType.Message, Message: not null, Message.Text: not null })
-        {
-            await HandleErrorAsync(
-                chat: chat,
-                messageId: TelegramHelpers.GetMessageId(update),
-                errorText: OrderReferenceScenarioMessages.InvalidMessageFormat,
-                ct: ct);
-            return;
-        }
-
-        if (update.Message.Text == SkipButtonText)
-        {
-            chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.Patronymic] = string.Empty;
-        }
-        else
-        {
-            if (!PatronymicValidator.Validate(update.Message.Text))
-            {
-                await HandleErrorAsync(
-                    chat: chat,
-                    messageId: TelegramHelpers.GetMessageId(update),
-                    errorText: OrderReferenceScenarioMessages.InvalidPatronymic,
-                    ct: ct);
-                return;
-            }
-
-            chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.Patronymic] = update.Message.Text;
-        }
-
-        await _dataContext.SaveChangesAsync(ct);
-
-        await _telegramMessageManager.DeleteMessageAsync(
-            chatId: chat.ExtId,
-            messageId: int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]),
-            ct: ct);
-        await _telegramMessageManager.DeleteMessageAsync(chatId: chat.ExtId, messageId: update.Message.Id, ct: ct);
-
-        await _scenarioExecutor.ChangeStateAsync(
-            chat: chat,
-            newState: _scenarioExecutor.GetState((int)OrderReferenceState.AskingForGroup),
-            update: update,
-            ct: ct);
     }
 
     private async Task HandleErrorAsync(
@@ -106,5 +46,73 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
             ct: ct);
         chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
         await _dataContext.SaveChangesAsync(ct);
+    }
+
+    private async Task ClearStateMessagesAsync(TelegramChat chat, int userMessageId, CancellationToken ct = default)
+    {
+        int messageToDeleteId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
+        await _telegramMessageManager.DeleteMessageAsync(
+            chatId: chat.ExtId,
+            messageId: messageToDeleteId,
+            ct: ct);
+        if (messageToDeleteId != userMessageId)
+        {
+            await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, userMessageId, ct);
+        }
+    }
+
+    public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
+    {
+        var message = await _telegramMessageManager.SendMessageAsync(
+            chat: chat,
+            text: OrderReferenceScenarioMessages.EnterPatronymic,
+            replyMarkup: SkipPatronymicInputKeyboard,
+            ct: ct);
+        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
+        await _dataContext.SaveChangesAsync(ct);
+    }
+
+    public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
+    {
+        await _scenarioExecutor.CancelAndThrowIfCancellationRequestedAsync(chat, update, ct);
+
+        if (!TelegramHelpers.TryGetUserInput(update, out string patronymic))
+        {
+            await HandleErrorAsync(
+                chat: chat,
+                messageId: TelegramHelpers.GetMessageId(update),
+                errorText: OrderReferenceScenarioMessages.InvalidMessageFormat,
+                ct: ct);
+            return;
+        }
+
+        if (patronymic == SkipButtonText)
+        {
+            chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.Patronymic] = string.Empty;
+        }
+        else
+        {
+            if (!PatronymicValidator.Validate(patronymic))
+            {
+                await HandleErrorAsync(
+                    chat: chat,
+                    messageId: TelegramHelpers.GetMessageId(update),
+                    errorText: OrderReferenceScenarioMessages.InvalidPatronymic,
+                    ct: ct);
+                return;
+            }
+
+            chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.Patronymic] = patronymic;
+        }
+
+        await _dataContext.SaveChangesAsync(ct);
+
+        await ClearStateMessagesAsync(chat: chat, userMessageId: TelegramHelpers.GetMessageId(update), ct: ct);
+
+        await _scenarioExecutor.ChangeStateAsync(
+            chat: chat,
+            newState: _scenarioExecutor.GetState((int)OrderReferenceState.AskingForGroup),
+            update: update,
+            ct: ct);
     }
 }
