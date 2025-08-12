@@ -74,6 +74,8 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
 
     public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
+        await _scenarioExecutor.CancelAndThrowIfCancellationRequestedAsync(chat, update, ct);
+
         if (!TelegramHelpers.TryGetUserInput(update, out string patronymic))
         {
             await HandleErrorAsync(

@@ -3,7 +3,9 @@ namespace UniCast.Application.TelegramBot.Messages.Scenarios;
 public static class OrderReferenceScenarioMessages
 {
     public const string Introduction = "Вы выбрали функцию заказа академической справки, которая подтверждает факт " +
-                                       "обучения в учебном заведении.";
+                                       "обучения в учебном заведении.\n\nДля отмены этого действия вы можете просто " +
+                                       "написать боту \"<b>Отмена</b>\", либо воспользоваться специальной кнопкой на Вашей " +
+                                       "клавиатуре.";
 
     public const string EnterPatronymic = "Для заказа справки, пожалуйста, укажите Ваше отчество. Это необходимо для " +
                                           "точной идентификации. Если у вас его нет, то нажмите кнопку 'Пропустить'.";
@@ -67,5 +69,7 @@ public static class OrderReferenceScenarioMessages
                                                      Способ получения - {4}
                                                      """;
 
-    public const string Completed = "Справка была успешно заказана, ваше сообщение отправлено методисту";
+    public const string Completed = "Справка была успешно заказана, ваше сообщение отправлено методисту.";
+
+    public const string Cancelled = "Заказ справки отменён.";
 }

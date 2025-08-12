@@ -51,6 +51,8 @@ public sealed class OrderReferenceOtherOrderPurposeSelectedState : IOrderReferen
 
     public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
+        await _scenarioExecutor.CancelAndThrowIfCancellationRequestedAsync(chat, update, ct);
+
         if (update is not { Type: UpdateType.Message, Message: not null, Message.Text: not null })
         {
             await HandleErrorAsync(

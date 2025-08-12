@@ -115,6 +115,8 @@ public sealed class OrderReferenceShowingReferenceFinalVersionState : IOrderRefe
 
     public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
+        await _scenarioExecutor.CancelAndThrowIfCancellationRequestedAsync(chat, update, ct);
+
         if (update is not { Type: UpdateType.CallbackQuery, CallbackQuery.Data: not null })
         {
             await HandleErrorAsync(
