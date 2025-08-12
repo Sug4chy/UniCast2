@@ -24,6 +24,21 @@ public sealed class OrderReferenceAskingForReferencesCountState : IOrderReferenc
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
 
+    private async Task HandleErrorAsync(
+        TelegramChat chat,
+        int messageId,
+        string errorText,
+        CancellationToken ct = default)
+    {
+        int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
+        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, botsPrevMessageId, ct);
+        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
+
+        var message = await _telegramMessageManager.SendMessageAsync(chat: chat, text: errorText, ct: ct);
+        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
+        await _dataContext.SaveChangesAsync(ct);
+    }
+
     public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         var message = await _telegramMessageManager.SendMessageAsync(
@@ -71,20 +86,5 @@ public sealed class OrderReferenceAskingForReferencesCountState : IOrderReferenc
             newState: _scenarioExecutor.GetState((int)OrderReferenceState.AskingForReferenceOrderPurpose),
             update: update,
             ct: ct);
-    }
-
-    private async Task HandleErrorAsync(
-        TelegramChat chat,
-        int messageId,
-        string errorText,
-        CancellationToken ct = default)
-    {
-        int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, botsPrevMessageId, ct);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
-
-        var message = await _telegramMessageManager.SendMessageAsync(chat: chat, text: errorText, ct: ct);
-        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
-        await _dataContext.SaveChangesAsync(ct);
     }
 }

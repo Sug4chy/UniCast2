@@ -31,16 +31,14 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
         OtherPurpose
     ];
 
-    private static readonly ReplyKeyboardMarkup PurposesKeyboard = new(
+    private static readonly InlineKeyboardMarkup PurposesKeyboard = new(
         [
             [Button(SocialProtectionPurpose), Button(VisaExtensionPurpose)],
-            [Button(TaxPurpose), Button(TransportCardPurpose), Button(FaxDeductionPurpose)],
-            [Button(PensionFundPurpose), Button(OtherPurpose)]
+            [Button(TaxPurpose), Button(TransportCardPurpose)],
+            [Button(FaxDeductionPurpose), Button(PensionFundPurpose)],
+            [Button(OtherPurpose)]
         ]
-    )
-    {
-        ResizeKeyboard = true
-    };
+    );
 
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
@@ -55,7 +53,8 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
 
-    private static KeyboardButton Button(string text) => new(text);
+    private static InlineKeyboardButton Button(string text) 
+        => InlineKeyboardButton.WithCallbackData(text);
 
     private async Task HandleErrorAsync(
         TelegramChat chat,
@@ -65,7 +64,10 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
     {
         int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
         await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, botsPrevMessageId, ct);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
+        if (botsPrevMessageId != messageId)
+        {
+            await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
+        }
 
         var message = await _telegramMessageManager.SendMessageAsync(
             chat: chat,
@@ -76,14 +78,11 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
         await _dataContext.SaveChangesAsync(ct);
     }
 
-    private async Task ClearStateMessagesAsync(TelegramChat chat, int userMessageId, CancellationToken ct = default)
-    {
-        await _telegramMessageManager.DeleteMessageAsync(
+    private Task ClearStateMessagesAsync(TelegramChat chat, CancellationToken ct = default)
+        => _telegramMessageManager.DeleteMessageAsync(
             chatId: chat.ExtId,
             messageId: int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]),
             ct: ct);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, userMessageId, ct);
-    }
 
     public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
@@ -98,7 +97,7 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
 
     public async Task HandleUserInputAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
-        if (update is not { Type: UpdateType.Message, Message: not null, Message.Text: not null })
+        if (update is not { Type: UpdateType.CallbackQuery, CallbackQuery.Data: not null })
         {
             await HandleErrorAsync(
                 chat: chat,
@@ -108,19 +107,20 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
             return;
         }
 
-        if (!KeyboardButtonsTexts.Contains(update.Message.Text))
+        string orderPurpose = update.CallbackQuery.Data;
+        if (!KeyboardButtonsTexts.Contains(orderPurpose))
         {
             await HandleErrorAsync(
                 chat: chat,
-                messageId: TelegramHelpers.GetMessageId(update),
+                messageId: update.CallbackQuery.Message!.Id,
                 errorText: OrderReferenceScenarioMessages.InvalidPurpose,
                 ct: ct);
             return;
         }
 
-        if (update.Message.Text == OtherPurpose)
+        if (orderPurpose == OtherPurpose)
         {
-            await ClearStateMessagesAsync(chat, update.Message.MessageId, ct);
+            await ClearStateMessagesAsync(chat: chat, ct: ct);
             await _scenarioExecutor.ChangeStateAsync(
                 chat: chat,
                 newState: _scenarioExecutor.GetState((int)OrderReferenceState.OtherOrderPurposeSelected),
@@ -129,10 +129,10 @@ public sealed class OrderReferenceAskingForReferenceOrderPurposeState : IOrderRe
             return;
         }
 
-        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.OrderPurpose] = update.Message.Text;
+        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.OrderPurpose] = orderPurpose;
         await _dataContext.SaveChangesAsync(ct);
 
-        await ClearStateMessagesAsync(chat, update.Message.MessageId, ct);
+        await ClearStateMessagesAsync(chat: chat, ct: ct);
 
         await _scenarioExecutor.ChangeStateAsync(
             chat: chat,

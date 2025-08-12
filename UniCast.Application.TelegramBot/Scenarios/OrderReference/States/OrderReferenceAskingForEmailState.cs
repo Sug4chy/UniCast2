@@ -2,7 +2,6 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
 using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Messages.Scenarios;
@@ -58,7 +57,6 @@ public sealed partial class OrderReferenceAskingForEmailState : IOrderReferenceS
         var message = await _telegramMessageManager.SendMessageAsync(
             chat: chat,
             text: OrderReferenceScenarioMessages.EnterYourEmail,
-            replyMarkup: new ReplyKeyboardRemove(),
             ct: ct);
         chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
         await _dataContext.SaveChangesAsync(ct);

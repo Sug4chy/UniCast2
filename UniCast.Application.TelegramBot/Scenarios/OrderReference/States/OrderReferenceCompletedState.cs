@@ -8,6 +8,7 @@ using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.Result;
 using UniCast.Application.TelegramBot.Messages.Scenarios;
 using UniCast.Application.TelegramBot.Scenarios.RefreshToken;
+using UniCast.Application.TelegramBot.Utils;
 using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.OrderReference.States;
@@ -72,7 +73,7 @@ public sealed class OrderReferenceCompletedState : IOrderReferenceState
         }
 
         await _telegramMessageManager.SendMessageAsync(
-            chatId: update.Message!.Chat.Id,
+            chatId: TelegramHelpers.GetChatId(update),
             text: OrderReferenceScenarioMessages.Completed,
             replyMarkup: new ReplyKeyboardRemove(),
             ct: ct);
