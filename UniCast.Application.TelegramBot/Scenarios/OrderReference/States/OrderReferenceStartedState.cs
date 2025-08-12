@@ -28,11 +28,11 @@ public sealed class OrderReferenceStartedState : IOrderReferenceState
         _logger.LogInformation("Started {ScenarioName} for chat {ChatID}", 
             nameof(Scenario.OrderReference), chat.Id);
 
+        await _telegramMessageManager.DeleteMessageAsync(chatId: chat.ExtId, messageId: update.Message!.Id, ct: ct);
         await _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
             text: OrderReferenceScenarioMessages.Introduction,
             ct: ct);
-        await _telegramMessageManager.DeleteMessageAsync(chatId: chat.ExtId, messageId: update.Message!.Id, ct: ct);
 
         await _scenarioExecutor.ChangeStateAsync(
             chat: chat,

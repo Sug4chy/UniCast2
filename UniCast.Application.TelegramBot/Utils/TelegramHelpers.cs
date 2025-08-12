@@ -17,6 +17,19 @@ public static class TelegramHelpers
         => update.Type switch
         {
             UpdateType.Message => update.Message!.Id,
+            UpdateType.CallbackQuery => update.CallbackQuery!.Message!.Id,
             _ => throw new ArgumentOutOfRangeException(nameof(update))
         };
+
+    public static bool TryGetUserInput(Update update, out string userInput)
+    {
+        userInput = (update.Type switch
+        {
+            UpdateType.Message => update.Message!.Text,
+            UpdateType.CallbackQuery => update.CallbackQuery!.Data,
+            _ => throw new ArgumentOutOfRangeException(nameof(update))
+        })!;
+
+        return userInput is not null;
+    }
 }
