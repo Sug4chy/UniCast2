@@ -34,34 +34,6 @@ public sealed class OrderReferenceAskingForReferenceObtainingMethodState : IOrde
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
 
-    private async Task HandleErrorAsync(
-        TelegramChat chat,
-        int messageId,
-        string errorText,
-        CancellationToken ct = default)
-    {
-        int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, botsPrevMessageId, ct);
-        if (botsPrevMessageId != messageId)
-        {
-            await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
-        }
-
-        var message = await _telegramMessageManager.SendMessageAsync(
-            chat: chat,
-            text: errorText,
-            replyMarkup: ObtainingMethodsKeyboard,
-            ct: ct);
-        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
-        await _dataContext.SaveChangesAsync(ct);
-    }
-
-    private Task ClearStateMessagesAsync(TelegramChat chat, CancellationToken ct = default)
-        => _telegramMessageManager.DeleteMessageAsync(
-            chatId: chat.ExtId,
-            messageId: int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]),
-            ct: ct);
-
     public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         var message = await _telegramMessageManager.SendMessageAsync(
@@ -79,7 +51,7 @@ public sealed class OrderReferenceAskingForReferenceObtainingMethodState : IOrde
 
         if (update is not { Type: UpdateType.CallbackQuery, CallbackQuery.Data: not null })
         {
-            await HandleErrorAsync(
+            await _scenarioExecutor.HandleErrorAsync(
                 chat: chat,
                 messageId: TelegramHelpers.GetMessageId(update),
                 errorText: OrderReferenceScenarioMessages.InvalidMessageFormat,
@@ -90,7 +62,7 @@ public sealed class OrderReferenceAskingForReferenceObtainingMethodState : IOrde
         string obtainingMethod = update.CallbackQuery.Data;
         if (!KeyboardButtonsTexts.Contains(obtainingMethod))
         {
-            await HandleErrorAsync(
+            await _scenarioExecutor.HandleErrorAsync(
                 chat: chat,
                 messageId: TelegramHelpers.GetMessageId(update),
                 errorText: OrderReferenceScenarioMessages.InvalidObtainingMethod,
@@ -103,7 +75,7 @@ public sealed class OrderReferenceAskingForReferenceObtainingMethodState : IOrde
             case OrderReferenceScenarioMessages.SelfPickupObtainingMethod:
                 chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.ObtainingMethod] = obtainingMethod;
                 await _dataContext.SaveChangesAsync(ct);
-                await ClearStateMessagesAsync(chat, ct);
+                await _scenarioExecutor.ClearMessagesAsync(chat: chat, ct: ct);
                 await _scenarioExecutor.ChangeStateAsync(
                     chat: chat,
                     newState: _scenarioExecutor.GetState((int)OrderReferenceState.ShowingReferenceFinalVersion),
@@ -111,7 +83,7 @@ public sealed class OrderReferenceAskingForReferenceObtainingMethodState : IOrde
                     ct: ct);
                 break;
             case OrderReferenceScenarioMessages.SendMeAnEmailObtainingMethod:
-                await ClearStateMessagesAsync(chat, ct);
+                await _scenarioExecutor.ClearMessagesAsync(chat: chat, ct: ct);
                 await _scenarioExecutor.ChangeStateAsync(
                     chat: chat,
                     newState: _scenarioExecutor.GetState((int)OrderReferenceState.AskingForEmail),
