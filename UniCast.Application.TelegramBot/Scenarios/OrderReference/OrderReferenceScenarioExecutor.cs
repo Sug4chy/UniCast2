@@ -28,19 +28,6 @@ public sealed class OrderReferenceScenarioExecutor : IScenarioExecutor<IOrderRef
         _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
     }
 
-    private async Task ClearScenarioMessagesAsync(TelegramChat chat, int userMessageId, CancellationToken ct = default)
-    {
-        int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
-        await _telegramMessageManager.DeleteMessageAsync(
-            chatId: chat.ExtId,
-            messageId: botsPrevMessageId,
-            ct: ct);
-        if (userMessageId != botsPrevMessageId)
-        {
-            await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, userMessageId, ct);
-        }
-    }
-
     public async Task StartScenarioAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         chat.CurrentScenario = Scenario.OrderReference;
@@ -117,6 +104,19 @@ public sealed class OrderReferenceScenarioExecutor : IScenarioExecutor<IOrderRef
                                 update.Message!.Text is not null &&
                                 update.Message.Text is "/order_reference");
 
+    public async Task ClearMessagesAsync(TelegramChat chat, int? userMessageId = null, CancellationToken ct = default)
+    {
+        int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
+        await _telegramMessageManager.DeleteMessageAsync(
+            chatId: chat.ExtId,
+            messageId: botsPrevMessageId,
+            ct: ct);
+        if (userMessageId.HasValue && userMessageId.Value != botsPrevMessageId)
+        {
+            await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, userMessageId.Value, ct);
+        }
+    }
+
     public async Task CancelAndThrowIfCancellationRequestedAsync(
         TelegramChat chat,
         Update update,
@@ -127,7 +127,7 @@ public sealed class OrderReferenceScenarioExecutor : IScenarioExecutor<IOrderRef
             return;
         }
 
-        await ClearScenarioMessagesAsync(chat, TelegramHelpers.GetMessageId(update), ct);
+        await ClearMessagesAsync(chat, TelegramHelpers.GetMessageId(update), ct);
         await ClearScenarioAsync(chat, ct);
         await _telegramMessageManager.SendMessageAsync(
             chatId: chat.ExtId,
@@ -136,5 +136,23 @@ public sealed class OrderReferenceScenarioExecutor : IScenarioExecutor<IOrderRef
             ct: ct);
 
         throw new ScenarioCancelledException(nameof(Scenario.OrderReference));
+    }
+
+    public async Task HandleErrorAsync(
+        TelegramChat chat,
+        int messageId,
+        string errorText,
+        CancellationToken ct = default)
+    {
+        int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
+        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, botsPrevMessageId, ct);
+        if (botsPrevMessageId != messageId)
+        {
+            await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
+        }
+
+        var message = await _telegramMessageManager.SendMessageAsync(chat: chat, text: errorText, ct: ct);
+        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
+        await _dataContext.SaveChangesAsync(ct);
     }
 }

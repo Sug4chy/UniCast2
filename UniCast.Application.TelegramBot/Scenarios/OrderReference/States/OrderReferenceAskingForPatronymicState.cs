@@ -29,38 +29,6 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
 
-    private async Task HandleErrorAsync(
-        TelegramChat chat,
-        int messageId,
-        string errorText,
-        CancellationToken ct = default)
-    {
-        int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, botsPrevMessageId, ct);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
-
-        var message = await _telegramMessageManager.SendMessageAsync(
-            chat: chat,
-            text: errorText,
-            replyMarkup: SkipPatronymicInputKeyboard,
-            ct: ct);
-        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
-        await _dataContext.SaveChangesAsync(ct);
-    }
-
-    private async Task ClearStateMessagesAsync(TelegramChat chat, int userMessageId, CancellationToken ct = default)
-    {
-        int messageToDeleteId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
-        await _telegramMessageManager.DeleteMessageAsync(
-            chatId: chat.ExtId,
-            messageId: messageToDeleteId,
-            ct: ct);
-        if (messageToDeleteId != userMessageId)
-        {
-            await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, userMessageId, ct);
-        }
-    }
-
     public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
         var message = await _telegramMessageManager.SendMessageAsync(
@@ -78,7 +46,7 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
 
         if (!TelegramHelpers.TryGetUserInput(update, out string patronymic))
         {
-            await HandleErrorAsync(
+            await _scenarioExecutor.HandleErrorAsync(
                 chat: chat,
                 messageId: TelegramHelpers.GetMessageId(update),
                 errorText: OrderReferenceScenarioMessages.InvalidMessageFormat,
@@ -94,7 +62,7 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
         {
             if (!PatronymicValidator.Validate(patronymic))
             {
-                await HandleErrorAsync(
+                await _scenarioExecutor.HandleErrorAsync(
                     chat: chat,
                     messageId: TelegramHelpers.GetMessageId(update),
                     errorText: OrderReferenceScenarioMessages.InvalidPatronymic,
@@ -107,7 +75,10 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
 
         await _dataContext.SaveChangesAsync(ct);
 
-        await ClearStateMessagesAsync(chat: chat, userMessageId: TelegramHelpers.GetMessageId(update), ct: ct);
+        await _scenarioExecutor.ClearMessagesAsync(
+            chat: chat, 
+            userMessageId: TelegramHelpers.GetMessageId(update), 
+            ct: ct);
 
         await _scenarioExecutor.ChangeStateAsync(
             chat: chat,

@@ -25,30 +25,6 @@ public sealed partial class OrderReferenceAskingForEmailState : IOrderReferenceS
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
 
-    private async Task HandleErrorAsync(
-        TelegramChat chat,
-        int messageId,
-        string errorText,
-        CancellationToken ct = default)
-    {
-        int botsPrevMessageId = int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, botsPrevMessageId, ct);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, messageId, ct);
-
-        var message = await _telegramMessageManager.SendMessageAsync(chat: chat, text: errorText, ct: ct);
-        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId] = message.ExtId.ToString();
-        await _dataContext.SaveChangesAsync(ct);
-    }
-
-    private async Task ClearStateMessagesAsync(TelegramChat chat, int userMessageId, CancellationToken ct = default)
-    {
-        await _telegramMessageManager.DeleteMessageAsync(
-            chatId: chat.ExtId,
-            messageId: int.Parse(chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.MessageToDeleteId]),
-            ct: ct);
-        await _telegramMessageManager.DeleteMessageAsync(chat.ExtId, userMessageId, ct);
-    }
-
     [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")]
     private partial Regex EmailRegex();
 
@@ -68,7 +44,7 @@ public sealed partial class OrderReferenceAskingForEmailState : IOrderReferenceS
 
         if (update is not { Type: UpdateType.Message, Message: not null, Message.Text: not null })
         {
-            await HandleErrorAsync(
+            await _scenarioExecutor.HandleErrorAsync(
                 chat: chat,
                 messageId: TelegramHelpers.GetMessageId(update),
                 errorText: OrderReferenceScenarioMessages.InvalidMessageFormat,
@@ -78,7 +54,7 @@ public sealed partial class OrderReferenceAskingForEmailState : IOrderReferenceS
 
         if (!EmailRegex().IsMatch(update.Message.Text))
         {
-            await HandleErrorAsync(
+            await _scenarioExecutor.HandleErrorAsync(
                 chat: chat,
                 messageId: TelegramHelpers.GetMessageId(update),
                 errorText: OrderReferenceScenarioMessages.InvalidEmailFormat,
@@ -90,7 +66,7 @@ public sealed partial class OrderReferenceAskingForEmailState : IOrderReferenceS
             string.Format(OrderReferenceScenarioMessages.EmailObtainingMethodTemplate, update.Message.Text);
         await _dataContext.SaveChangesAsync(ct);
 
-        await ClearStateMessagesAsync(chat: chat, userMessageId: update.Message.Id, ct: ct);
+        await _scenarioExecutor.ClearMessagesAsync(chat: chat, userMessageId: update.Message.Id, ct: ct);
 
         await _scenarioExecutor.ChangeStateAsync(
             chat: chat,
