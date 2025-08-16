@@ -12,7 +12,7 @@ public static class OrderReferenceScenarioMessages
 
     public const string InvalidMessageFormat = "Кажется, я Вас не понимаю. Введите корректное значение.";
 
-    public const string InvalidPatronymic = "Укажите отчество в корректном формате";
+    public const string InvalidPatronymic = "Укажите отчество в корректном формате. Текущие ошибки:\n\n{0}";
 
     public const string EnterGroupName = "Укажите Вашу учебную группу.";
     public const string InvalidGroupName = "Укажите корректную учебную группу";

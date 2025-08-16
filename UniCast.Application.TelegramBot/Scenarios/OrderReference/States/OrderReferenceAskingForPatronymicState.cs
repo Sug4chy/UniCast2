@@ -16,6 +16,8 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
     private static readonly InlineKeyboardMarkup SkipPatronymicInputKeyboard = 
         new(InlineKeyboardButton.WithCallbackData(SkipButtonText));
 
+    private static readonly PatronymicValidator PatronymicValidator = new();
+
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly IDataContext _dataContext;
@@ -60,12 +62,15 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
         }
         else
         {
-            if (!PatronymicValidator.Validate(patronymic))
+            var validationResult = await PatronymicValidator.ValidateAsync(patronymic, ct);
+            if (!validationResult.IsValid)
             {
                 await _scenarioExecutor.HandleErrorAsync(
                     chat: chat,
                     messageId: TelegramHelpers.GetMessageId(update),
-                    errorText: OrderReferenceScenarioMessages.InvalidPatronymic,
+                    errorText: string.Format(
+                        OrderReferenceScenarioMessages.InvalidPatronymic, 
+                        string.Join('\n', validationResult.Errors.Select(x => $"- <b>{x.ErrorMessage}</b>"))),
                     ct: ct);
                 return;
             }
