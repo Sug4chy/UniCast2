@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -6,14 +5,14 @@ using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Messages.Scenarios;
 using UniCast.Application.TelegramBot.Utils;
+using UniCast.Application.TelegramBot.Validation;
 using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.OrderReference.States;
 
-public sealed partial class OrderReferenceAskingForGroupState : IOrderReferenceState
+public sealed class OrderReferenceAskingForGroupState : IOrderReferenceState
 {
-    [GeneratedRegex("^(ПрИ|ПИ|БИ)-[1-4]0[1-9]")]
-    private static partial Regex GroupNameRegex();
+    private static readonly GroupNameValidator GroupNameValidator = new();
 
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
@@ -26,6 +25,20 @@ public sealed partial class OrderReferenceAskingForGroupState : IOrderReferenceS
         _scenarioExecutor = scenarioExecutor;
         _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
+    }
+
+    private static string NormalizeGroupName(string groupName)
+    {
+        string[] groupNameParts = groupName.Split('-');
+        string courseAndGroupNumber = groupNameParts[1];
+
+        return groupNameParts[0].ToLower() switch
+        {
+            "при" => $"ПрИ-{courseAndGroupNumber}",
+            "пи" => $"ПИ-{courseAndGroupNumber}",
+            "би" => $"БИ-{courseAndGroupNumber}",
+            _ => throw new ArgumentOutOfRangeException(nameof(groupName))
+        };
     }
 
     public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
@@ -52,17 +65,20 @@ public sealed partial class OrderReferenceAskingForGroupState : IOrderReferenceS
             return;
         }
 
-        if (!GroupNameRegex().IsMatch(update.Message.Text))
+        string groupName = update.Message.Text;
+        var validationResult = await GroupNameValidator.ValidateAsync(groupName, ct);
+        if (!validationResult.IsValid)
         {
             await _scenarioExecutor.HandleErrorAsync(
                 chat: chat,
                 messageId: TelegramHelpers.GetMessageId(update),
-                errorText: OrderReferenceScenarioMessages.InvalidGroupName,
+                errorText: string.Format(OrderReferenceScenarioMessages.InvalidGroupName,
+                    string.Join('\n', validationResult.Errors.Select(x => $"- <b>{x.ErrorMessage}</b>"))),
                 ct: ct);
             return;
         }
 
-        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.GroupName] = update.Message.Text;
+        chat.CurrentScenarioArgs[OrderReferenceScenarioArgsKeys.GroupName] = NormalizeGroupName(groupName);
         await _dataContext.SaveChangesAsync(ct);
 
         await _scenarioExecutor.ClearMessagesAsync(chat: chat, userMessageId: update.Message.Id, ct: ct);

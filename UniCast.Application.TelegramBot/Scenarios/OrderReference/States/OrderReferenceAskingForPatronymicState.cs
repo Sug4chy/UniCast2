@@ -5,6 +5,7 @@ using UniCast.Application.Abstractions.Persistence;
 using UniCast.Application.Abstractions.Telegram;
 using UniCast.Application.TelegramBot.Messages.Scenarios;
 using UniCast.Application.TelegramBot.Utils;
+using UniCast.Application.TelegramBot.Validation;
 using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.OrderReference.States;
@@ -15,6 +16,8 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
 
     private static readonly InlineKeyboardMarkup SkipPatronymicInputKeyboard = 
         new(InlineKeyboardButton.WithCallbackData(SkipButtonText));
+
+    private static readonly PatronymicValidator PatronymicValidator = new();
 
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
@@ -60,12 +63,15 @@ public sealed class OrderReferenceAskingForPatronymicState : IOrderReferenceStat
         }
         else
         {
-            if (!PatronymicValidator.Validate(patronymic))
+            var validationResult = await PatronymicValidator.ValidateAsync(patronymic, ct);
+            if (!validationResult.IsValid)
             {
                 await _scenarioExecutor.HandleErrorAsync(
                     chat: chat,
                     messageId: TelegramHelpers.GetMessageId(update),
-                    errorText: OrderReferenceScenarioMessages.InvalidPatronymic,
+                    errorText: string.Format(
+                        OrderReferenceScenarioMessages.InvalidPatronymic, 
+                        string.Join('\n', validationResult.Errors.Select(x => $"- <b>{x.ErrorMessage}</b>"))),
                     ct: ct);
                 return;
             }
