@@ -1,4 +1,5 @@
-using System.Text.RegularExpressions;
+using FluentValidation;
+using FluentValidation.Validators;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -10,8 +11,10 @@ using UniCast.Domain.Telegram.Entities;
 
 namespace UniCast.Application.TelegramBot.Scenarios.OrderReference.States;
 
-public sealed partial class OrderReferenceAskingForEmailState : IOrderReferenceState
+public sealed class OrderReferenceAskingForEmailState : IOrderReferenceState
 {
+    private static readonly AspNetCoreCompatibleEmailValidator<string> EmailValidator = new();
+
     private readonly OrderReferenceScenarioExecutor _scenarioExecutor;
     private readonly ITelegramMessageManager _telegramMessageManager;
     private readonly IDataContext _dataContext;
@@ -24,9 +27,6 @@ public sealed partial class OrderReferenceAskingForEmailState : IOrderReferenceS
         _telegramMessageManager = serviceProvider.GetRequiredService<ITelegramMessageManager>();
         _dataContext = serviceProvider.GetRequiredService<IDataContext>();
     }
-
-    [GeneratedRegex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$")]
-    private partial Regex EmailRegex();
 
     public async Task OnStateChangedAsync(TelegramChat chat, Update update, CancellationToken ct = default)
     {
@@ -52,7 +52,9 @@ public sealed partial class OrderReferenceAskingForEmailState : IOrderReferenceS
             return;
         }
 
-        if (!EmailRegex().IsMatch(update.Message.Text))
+        string email = update.Message.Text;
+        bool isValid = EmailValidator.IsValid(new ValidationContext<string>(email), email);
+        if (!isValid)
         {
             await _scenarioExecutor.HandleErrorAsync(
                 chat: chat,
